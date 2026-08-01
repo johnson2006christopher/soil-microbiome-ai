@@ -1,12 +1,13 @@
 # Secrets — never commit real env files
 .env
 .env.*
-# ...but DO keep the example templates everywhere
+# ...but DO keep the example templates and production client config everywhere
 !.env.example
 !**/.env.example
 !server/.env.example
 !client/.env.example
 !ml-engine/.env.example
+!client/.env.production
 
 # Dependencies
 node_modules/
