@@ -20,8 +20,9 @@ const app = express();
 const server = http.createServer(app);
 
 // ── Socket.io ─────────────────────────────────────────────────────
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:3000').split(',').map(s => s.trim());
 const io = new Server(server, {
-  cors: { origin: process.env.CLIENT_URL || 'http://localhost:3000', credentials: true },
+  cors: { origin: allowedOrigins, credentials: true },
 });
 
 io.on('connection', (socket) => {
@@ -49,7 +50,13 @@ app.set('io', io);
 
 // ── Middleware ────────────────────────────────────────────────────
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '5mb' }));
