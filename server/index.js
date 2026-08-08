@@ -20,9 +20,11 @@ const app = express();
 const server = http.createServer(app);
 
 // ── Socket.io ─────────────────────────────────────────────────────
+// In dev, accept any origin (e.g. Cloudflare Tunnel hostnames change every run).
+const allowAllOrigins = process.env.CORS_ALLOW_ALL === 'true' || process.env.NODE_ENV !== 'production';
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:3000').split(',').map(s => s.trim());
 const io = new Server(server, {
-  cors: { origin: allowedOrigins, credentials: true },
+  cors: { origin: allowAllOrigins ? true : allowedOrigins, credentials: true },
 });
 
 io.on('connection', (socket) => {
@@ -51,7 +53,7 @@ app.set('io', io);
 // ── Middleware ────────────────────────────────────────────────────
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (allowAllOrigins || !origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
