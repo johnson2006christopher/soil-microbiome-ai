@@ -6,7 +6,7 @@ const mlService = require('../services/mlService');
 const router = express.Router();
 router.use(auth);
 
-// GET /api/analytics/dashboard
+// GET /api/analytics/dashboard?farmId= (optional: scope stats to one farm)
 router.get('/dashboard', async (req, res, next) => {
   try {
     const userId = req.user.userId;
@@ -15,7 +15,10 @@ router.get('/dashboard', async (req, res, next) => {
       where: { userId },
       select: { id: true },
     });
-    const farmIds = farms.map((f) => f.id);
+    const ownedIds = farms.map((f) => f.id);
+    const { farmId } = req.query;
+    if (farmId && !ownedIds.includes(farmId)) return res.status(403).json({ error: 'Access denied' });
+    const farmIds = farmId ? [farmId] : ownedIds;
 
     if (farmIds.length === 0) {
       return res.json({
@@ -65,7 +68,7 @@ router.get('/dashboard', async (req, res, next) => {
     }
 
     res.json({
-      totalFarms: farmIds.length,
+      totalFarms: ownedIds.length,
       totalPredictions,
       totalImageAnalyses,
       avgPredictedYield: yieldAgg._avg.predictedYieldTons
