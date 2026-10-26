@@ -64,6 +64,10 @@ app.use(cors({
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
+// Behind Railway / Cloudflare proxies: use the client IP from X-Forwarded-For,
+// otherwise every visitor shares one rate-limit bucket
+app.set('trust proxy', 1);
+
 // Rate limiting — global API throttle
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
