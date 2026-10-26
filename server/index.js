@@ -100,7 +100,7 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 // ── Global Error Handler ──────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
-  console.error(`[ERROR] ${_req.method} ${_req.path}:`, err.message);
+  console.error(`[ERROR] ${_req.method} ${_req.path}:`, err.message, err.cause ? `(${err.cause})` : '');
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json({ error: 'File too large (max 10 MB)' });
   }
@@ -115,7 +115,8 @@ app.use((err, _req, res, _next) => {
   }
   const status = err.status || 500;
   // Never leak internals (stack, paths, DB errors) to the client on server errors
-  const message = status < 500 ? err.message : 'Something went wrong on our side. Please try again.';
+  // err.expose marks a message written for end users (e.g. "AI service unavailable")
+  const message = status < 500 || err.expose ? err.message : 'Something went wrong on our side. Please try again.';
   res.status(status).json({ error: message || 'Internal server error' });
 });
 
