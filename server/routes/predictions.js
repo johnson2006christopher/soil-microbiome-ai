@@ -53,6 +53,8 @@ router.post('/', async (req, res, next) => {
 
     // Save in transaction
     const prediction = await prisma.$transaction(async (tx) => {
+      // soilReadingId is unique: re-running on the same reading replaces the old result
+      await tx.yieldPrediction.deleteMany({ where: { soilReadingId: reading.id } });
       const pred = await tx.yieldPrediction.create({
         data: {
           farmId,
