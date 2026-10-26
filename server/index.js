@@ -103,8 +103,16 @@ app.use((err, _req, res, _next) => {
   if (err.message?.includes('not allowed')) {
     return res.status(400).json({ error: err.message });
   }
+  if (err.code === 'P2002') {
+    return res.status(409).json({ error: 'This record already exists.' });
+  }
+  if (err.name === 'PrismaClientValidationError') {
+    return res.status(400).json({ error: 'Some values are invalid. Please check the form and try again.' });
+  }
   const status = err.status || 500;
-  res.status(status).json({ error: err.message || 'Internal server error' });
+  // Never leak internals (stack, paths, DB errors) to the client on server errors
+  const message = status < 500 ? err.message : 'Something went wrong on our side. Please try again.';
+  res.status(status).json({ error: message || 'Internal server error' });
 });
 
 // ── Start ─────────────────────────────────────────────────────────
