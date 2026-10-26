@@ -16,6 +16,3 @@ export const getAnalyses =(farmId, page = 1, imageType = null, limit = 20) =>
 
 export const getAnalysis = (id) =>
   axiosClient.get(`/api/image/analyses/${id}`).then(r => r.data);
-
-export const getImageUrl = (id) =>
-  `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/image/analyses/${id}/image`;
