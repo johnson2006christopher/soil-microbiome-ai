@@ -19,7 +19,7 @@ router.post('/', async (req, res, next) => {
     // Fetch reading
     let reading;
     if (soilReadingId) {
-      reading = await prisma.soilReading.findUnique({ where: { id: soilReadingId } });
+      reading = await prisma.soilReading.findFirst({ where: { id: soilReadingId, farmId } });
     } else {
       reading = await prisma.soilReading.findFirst({
         where: { farmId },
@@ -54,7 +54,7 @@ router.post('/', async (req, res, next) => {
     // Save in transaction
     const prediction = await prisma.$transaction(async (tx) => {
       // soilReadingId is unique: re-running on the same reading replaces the old result
-      await tx.yieldPrediction.deleteMany({ where: { soilReadingId: reading.id } });
+      await tx.yieldPrediction.deleteMany({ where: { soilReadingId: reading.id, farmId } });
       const pred = await tx.yieldPrediction.create({
         data: {
           farmId,
