@@ -34,10 +34,12 @@ async function main() {
   }
 
   // ── Demo User ──────────────────────────────────────────────────
-  const password = await bcrypt.hash('demo1234', 10);
+  // Production: set DEMO_PASSWORD so the presenter account isn't guessable from the README
+  const demoPassword = process.env.DEMO_PASSWORD || 'demo1234';
+  const password = await bcrypt.hash(demoPassword, 10);
   const user = await prisma.user.upsert({
     where: { email: 'demo@farm.ai' },
-    update: { role: 'admin', tokenVersion: 0 },
+    update: { role: 'admin', tokenVersion: 0, password },
     create: {
       name: 'Demo Farmer',
       email: 'demo@farm.ai',
@@ -305,7 +307,7 @@ async function main() {
   }
 
   console.log('\n✅ Seed complete!\n');
-  console.log('  Demo login: demo@farm.ai / demo1234');
+  console.log(`  Demo login: demo@farm.ai / ${process.env.DEMO_PASSWORD ? '<DEMO_PASSWORD>' : demoPassword}`);
   console.log('  Open:       http://localhost:3000\n');
 }
 
