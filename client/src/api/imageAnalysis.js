@@ -6,7 +6,10 @@ export const analyzeImage = (formData) =>
     timeout: 120000,
   }).then(r => r.data);
 
-export const getAnalyses = (farmId, page = 1, imageType = null, limit = 20) =>
+export const getImageModels = () =>
+  axiosClient.get('/api/image/models').then(r => r.data);
+
+export const getAnalyses =(farmId, page = 1, imageType = null, limit = 20) =>
   axiosClient.get('/api/image/analyses', {
     params: { farmId, page, limit, ...(imageType ? { imageType } : {}) },
   }).then(r => r.data);
