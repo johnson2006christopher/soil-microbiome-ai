@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Camera, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { analyzeImage, getAnalyses, getImageUrl, getImageModels } from '../../api/imageAnalysis';
+import { analyzeImage, getAnalyses, getImageModels } from '../../api/imageAnalysis';
+import AuthImage from '../../components/AuthImage';
 import { useFarm } from '../../contexts/FarmContext';
 import ImageDropzone from '../../components/ImageDropzone';
 import HealthStatusBadge from '../../components/HealthStatusBadge';
@@ -215,8 +216,10 @@ export default function ImageAnalysis() {
           {history.map((a) => (
             <button key={a.id} onClick={() => setSelectedAnalysis(a)}
               className="text-left group border border-gray-200 rounded-xl overflow-hidden hover:border-primary-300 transition-all">
-              <div className="h-24 bg-gray-100 flex items-center justify-center relative">
-                <Camera size={24} className="text-gray-300" />
+              <div className="h-24 bg-gray-100 flex items-center justify-center relative overflow-hidden">
+                <AuthImage src={`/api/image/analyses/${a.id}/image`} alt={a.originalFilename}
+                  className="w-full h-full object-cover"
+                  fallback={<Camera size={24} className="text-gray-300" />} />
                 <HealthStatusBadge status={a.healthStatus} size="sm" className="absolute top-1 left-1" />
               </div>
               <div className="p-2">
