@@ -28,7 +28,7 @@ export default function Overview() {
       setLoading(true);
       try {
         const [s, t, p] = await Promise.all([
-          getDashboardStats(),
+          getDashboardStats(activeFarm.id),
           getTrends(activeFarm.id).catch(() => []),
           getPredictions(activeFarm.id, 1, 30).catch(() => ({ predictions: [] })),
         ]);
