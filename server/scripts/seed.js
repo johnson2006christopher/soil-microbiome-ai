@@ -52,8 +52,8 @@ async function main() {
   // ── Farms ──────────────────────────────────────────────────────
   const farmsData = [
     { name: 'Kilimanjaro Tomato Farm', location: 'Moshi, Tanzania', gpsLat: -3.35, gpsLng: 37.33, sizeHa: 8.0, cropType: 'TOMATO', region: 'East Africa' },
-    { name: 'Volta Corn Farm',         location: 'Tamale, Ghana',   gpsLat:  9.40, gpsLng: -0.85, sizeHa: 15.0, cropType: 'CORN',   region: 'West Africa' },
-    { name: 'Mekong Mixed Farm',       location: 'Can Tho, Vietnam', gpsLat: 10.03, gpsLng: 105.78, sizeHa: 5.5, cropType: 'MIXED',  region: 'Southeast Asia' },
+    { name: 'Dodoma Maize Farm',       location: 'Dodoma, Tanzania',   gpsLat: -6.17, gpsLng: 35.74, sizeHa: 15.0, cropType: 'CORN',   region: 'East Africa' },
+    { name: 'Morogoro Mixed Farm',     location: 'Morogoro, Tanzania', gpsLat: -6.82, gpsLng: 37.66, sizeHa: 5.5, cropType: 'MIXED',  region: 'East Africa' },
   ];
 
   const farms = [];
