@@ -45,6 +45,7 @@ router.post('/register', async (req, res, next) => {
           create: {
             name: `${name}'s Farm`,
             location: farmLocation || 'Unknown',
+            sizeHa: farmSizeHa ? parseFloat(farmSizeHa) : null,
             cropType: 'TOMATO',
           },
         },
