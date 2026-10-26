@@ -6,6 +6,7 @@ const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
+const prisma = require('./lib/prisma');
 
 // ── Startup validation ────────────────────────────────────────────
 if (!process.env.JWT_SECRET) {
@@ -27,17 +28,19 @@ const io = new Server(server, {
   cors: { origin: allowAllOrigins ? true : allowedOrigins, credentials: true },
 });
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   const { farmId, token } = socket.handshake.query;
 
-  // Verify JWT before allowing farm room subscription
+  // Verify JWT and farm ownership before allowing farm room subscription
   if (farmId) {
     try {
-      jwt.verify(token, process.env.JWT_SECRET);
+      const { userId } = jwt.verify(token, process.env.JWT_SECRET);
+      const farm = await prisma.farm.findFirst({ where: { id: farmId, userId }, select: { id: true } });
+      if (!farm) throw new Error('farm not owned by user');
       socket.join(farmId);
       console.log(`Socket ${socket.id} joined farm room: ${farmId}`);
     } catch {
-      console.warn(`Socket ${socket.id} rejected: invalid/missing token for farm ${farmId}`);
+      console.warn(`Socket ${socket.id} rejected: invalid token or farm ${farmId} not owned`);
       socket.disconnect(true);
       return;
     }
