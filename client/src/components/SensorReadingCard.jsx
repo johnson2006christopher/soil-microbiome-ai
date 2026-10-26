@@ -36,7 +36,7 @@ export default function SensorReadingCard({ label, value, unit, optimalMin, opti
         <span className="text-xs font-medium text-gray-600 leading-tight">{label}</span>
         {hasOptimal && (
           <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${c.badge}`}>
-            {status === 'good' ? '✓ OK' : status === 'warning' ? '△ Low/High' : '✕ Critical'}
+            {{ good: '✓ OK', warning: '△ Low/High', danger: '✕ Critical', normal: 'No data' }[status]}
           </span>
         )}
       </div>
