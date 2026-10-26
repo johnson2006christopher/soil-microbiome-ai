@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Cpu, Camera, TrendingUp, Leaf, ArrowRight, Zap, FlaskConical, BarChart2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { startDemo } from '../api/auth';
 import toast from 'react-hot-toast';
 
 const STEPS = [
@@ -14,11 +15,14 @@ const STEPS = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { loginWithData } = useAuth();
 
   const handleDemoLogin = async () => {
     try {
-      await login('demo@farm.ai', 'demo1234');
+      // Each visitor gets a private guest account with sample (simulated) data
+      const { token, user } = await startDemo();
+      localStorage.removeItem('activeFarmId');
+      loginWithData(token, user);
       navigate('/dashboard/overview');
     } catch (err) {
       const msg = err.response?.data?.error;
