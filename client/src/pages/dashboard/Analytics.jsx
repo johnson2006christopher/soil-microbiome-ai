@@ -54,8 +54,10 @@ export default function Analytics() {
   // Per-class CNN F1
   const makeCnnBarData = (datasetName) => {
     const m = cnnMetrics[datasetName];
-    if (!m?.per_class) return [];
-    return Object.entries(m.per_class).map(([cls, v]) => ({
+    // Prefer the held-out test split; fall back to validation metrics
+    const perClass = m?.test?.per_class || m?.per_class;
+    if (!perClass) return [];
+    return Object.entries(perClass).map(([cls, v]) => ({
       name: cls.split('___').pop()?.replace(/_/g, ' ') || cls,
       f1: Math.round((v.f1_score || 0) * 100),
     }));
@@ -87,13 +89,18 @@ export default function Analytics() {
       {/* Soil Model */}
       {tab === 'soil' && (
         <div className="space-y-6">
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800">
+            <strong>Prototype model.</strong> No real harvest data is available yet, so the yield model is trained
+            on synthetic data generated from agronomic rules. The scores below measure how well it fits that
+            synthetic data, not real-world accuracy.
+          </div>
           <div className="grid md:grid-cols-2 gap-4">
             <StatCard title="Best Ensemble R²" value={bestR2?.toFixed(4) ?? '—'} icon={Target} color="green" />
             <StatCard title="Best Ensemble RMSE" value={bestRmse?.toFixed(4) ?? '—'} unit="t/ha" icon={TrendingUp} color="blue" />
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-            <h3 className="font-semibold text-gray-700 mb-4">Model Comparison — 5-Fold Cross Validation</h3>
+            <h3 className="font-semibold text-gray-700 mb-4">Model Comparison — 5-Fold Cross Validation (synthetic data)</h3>
             {loading ? <div className="h-20 flex items-center justify-center text-gray-400 text-sm">Loading...</div>
               : <ModelComparisonTable metrics={tabularMetrics} type="tabular" />}
           </div>
@@ -150,6 +157,11 @@ export default function Analytics() {
       {/* Image Model */}
       {tab === 'image' && (
         <div className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-sm text-blue-800">
+            Trained and tested on the PlantVillage leaf dataset (Mohanty et al., 2016). Test accuracy is measured on
+            images the model never saw during training. These are close-up lab photos, so accuracy on field photos
+            is expected to be lower.
+          </div>
           <div className="grid md:grid-cols-3 gap-4">
             {['soil', 'tomato', 'corn'].map((ds) => {
               const m = cnnMetrics[ds];
@@ -158,16 +170,22 @@ export default function Analytics() {
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="font-semibold text-gray-700 capitalize">{ds} CNN</h3>
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${m ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {m ? 'Trained' : 'Not Trained'}
+                      {m ? 'Trained' : 'Coming soon'}
                     </span>
                   </div>
                   {m ? (
                     <div className="space-y-1">
-                      <div className="flex justify-between text-sm"><span className="text-gray-500">Accuracy</span><span className="font-bold text-gray-800">{(m.accuracy * 100).toFixed(1)}%</span></div>
+                      {m.test && (
+                        <div className="flex justify-between text-sm"><span className="text-gray-500">Test accuracy</span><span className="font-bold text-gray-800">{(m.test.accuracy * 100).toFixed(1)}%</span></div>
+                      )}
+                      <div className="flex justify-between text-sm"><span className="text-gray-500">Validation accuracy</span><span className="font-bold text-gray-800">{(m.accuracy * 100).toFixed(1)}%</span></div>
+                      {m.test && (
+                        <div className="flex justify-between text-sm"><span className="text-gray-500">Test images</span><span className="font-bold text-gray-800">{m.test.samples.toLocaleString()}</span></div>
+                      )}
                       <div className="flex justify-between text-sm"><span className="text-gray-500">Classes</span><span className="font-bold text-gray-800">{m.num_classes}</span></div>
                       <div className="flex justify-between text-sm"><span className="text-gray-500">Samples</span><span className="font-bold text-gray-800">{m.training_samples?.toLocaleString()}</span></div>
                     </div>
-                  ) : <p className="text-xs text-gray-400">No model trained. Add images to ml-engine/data/{ds}/</p>}
+                  ) : <p className="text-xs text-gray-400">This model is not available yet.</p>}
                 </div>
               );
             })}
@@ -179,7 +197,7 @@ export default function Analytics() {
             if (!barData.length) return null;
             return (
               <div key={ds} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-                <h3 className="font-semibold text-gray-700 mb-4 capitalize">{ds} CNN — Per-Class F1 Score</h3>
+                <h3 className="font-semibold text-gray-700 mb-4 capitalize">{ds} CNN — Per-Class F1 Score{cnnMetrics[ds]?.test ? ' (held-out test set)' : ''}</h3>
                 <ResponsiveContainer width="100%" height={barData.length * 30 + 40}>
                   <BarChart data={barData} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} />
