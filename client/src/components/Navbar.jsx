@@ -15,7 +15,7 @@ export default function Navbar({ isDeviceOnline }) {
             {activeFarm?.name || 'Soil Microbiome AI'}
           </h1>
           {activeFarm && (
-            <p className="text-xs text-gray-400">{activeFarm.location} · {activeFarm.cropType}</p>
+            <p className="text-xs text-gray-400 capitalize">{activeFarm.location} · {activeFarm.cropType?.toLowerCase()}</p>
           )}
         </div>
       </div>
