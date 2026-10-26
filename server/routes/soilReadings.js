@@ -54,6 +54,10 @@ router.post('/', async (req, res, next) => {
       nitrogenPpm:           { min: 0,  max: 10000, required: true, label: 'nitrogenPpm' },
       phosphorusPpm:         { min: 0,  max: 10000, required: true, label: 'phosphorusPpm' },
       potassiumPpm:          { min: 0,  max: 10000, required: true, label: 'potassiumPpm' },
+      bulkDensity:           { min: 0,  max: 3,     required: false, label: 'bulkDensity' },
+      calciumPpm:            { min: 0,  max: 100000, required: false, label: 'calciumPpm' },
+      magnesiumPpm:          { min: 0,  max: 10000, required: false, label: 'magnesiumPpm' },
+      sulfurPpm:             { min: 0,  max: 10000, required: false, label: 'sulfurPpm' },
       microbialDiversityIndex:      { min: 0, max: 20,   required: false, label: 'microbialDiversityIndex' },
       pathogenicFungiRatio:         { min: 0, max: 100,  required: false, label: 'pathogenicFungiRatio' },
       nitrogenFixingBacteriaRatio:  { min: 0, max: 100,  required: false, label: 'nitrogenFixingBacteriaRatio' },
@@ -66,6 +70,8 @@ router.post('/', async (req, res, next) => {
       growingSeasonDays:     { min: 0,  max: 730,  required: false, label: 'growingSeasonDays' },
     };
 
+    // Only validated fields reach the DB, as numbers (form inputs arrive as strings)
+    const data = { farmId, source: 'MANUAL', mycorrhizalFungiPresence: Boolean(fields.mycorrhizalFungiPresence) };
     for (const [key, rule] of Object.entries(validators)) {
       const val = fields[key];
       if (rule.required && (val === undefined || val === null || val === '')) {
@@ -77,12 +83,11 @@ router.post('/', async (req, res, next) => {
         if (n < rule.min || n > rule.max) {
           return res.status(400).json({ error: `${rule.label} must be between ${rule.min} and ${rule.max}` });
         }
+        data[key] = key === 'growingSeasonDays' ? Math.round(n) : n;
       }
     }
 
-    const reading = await prisma.soilReading.create({
-      data: { farmId, source: 'MANUAL', ...fields },
-    });
+    const reading = await prisma.soilReading.create({ data });
     res.status(201).json(reading);
   } catch (err) { next(err); }
 });

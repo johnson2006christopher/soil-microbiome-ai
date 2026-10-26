@@ -6,6 +6,9 @@ export const analyzeImage = (formData) =>
     timeout: 120000,
   }).then(r => r.data);
 
+export const getImageModels = () =>
+  axiosClient.get('/api/image/models').then(r => r.data);
+
 export const getAnalyses = (farmId, page = 1, imageType = null, limit = 20) =>
   axiosClient.get('/api/image/analyses', {
     params: { farmId, page, limit, ...(imageType ? { imageType } : {}) },
@@ -13,6 +16,3 @@ export const getAnalyses = (farmId, page = 1, imageType = null, limit = 20) =>
 
 export const getAnalysis = (id) =>
   axiosClient.get(`/api/image/analyses/${id}`).then(r => r.data);
-
-export const getImageUrl = (id) =>
-  `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/image/analyses/${id}/image`;

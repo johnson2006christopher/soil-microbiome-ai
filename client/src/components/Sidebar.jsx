@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Cpu, Camera, TrendingUp, Lightbulb, BarChart2, History, ChevronLeft, ChevronRight, Leaf } from 'lucide-react';
+import { LayoutDashboard, Cpu, Camera, TrendingUp, Lightbulb, BarChart2, History, ChevronLeft, ChevronRight, Leaf, Plus, Pencil } from 'lucide-react';
 import { useFarm } from '../contexts/FarmContext';
+import FarmModal from './FarmModal';
 
 const NAV = [
   { to: '/dashboard/overview',         icon: LayoutDashboard, label: 'Overview' },
@@ -15,7 +16,15 @@ const NAV = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const { farms, activeFarm, setActiveFarm } = useFarm();
+  const { farms, activeFarm, setActiveFarm, refreshFarms } = useFarm();
+  // null = closed, 'new' = create, farm object = edit
+  const [farmModal, setFarmModal] = useState(null);
+
+  async function handleFarmSaved(farm) {
+    setFarmModal(null);
+    setActiveFarm(farm);
+    await refreshFarms();
+  }
 
   return (
     <aside className={`flex flex-col bg-gray-900 text-white transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'} min-h-screen flex-shrink-0`}>
@@ -28,7 +37,7 @@ export default function Sidebar() {
       </div>
 
       {/* Farm Selector */}
-      {!collapsed && farms.length > 0 && (
+      {!collapsed && (
         <div className="px-3 py-3 border-b border-gray-700">
           <label className="text-xs text-gray-400 uppercase tracking-wide block mb-1">Active Farm</label>
           <select
@@ -43,7 +52,23 @@ export default function Sidebar() {
               <option key={f.id} value={f.id}>{f.name}</option>
             ))}
           </select>
+          <div className="flex gap-2 mt-2">
+            <button onClick={() => setFarmModal('new')}
+              className="flex-1 flex items-center justify-center gap-1 py-1 text-xs text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-800 hover:text-white">
+              <Plus size={12} /> New farm
+            </button>
+            {activeFarm && (
+              <button onClick={() => setFarmModal(activeFarm)}
+                className="flex-1 flex items-center justify-center gap-1 py-1 text-xs text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-800 hover:text-white">
+                <Pencil size={12} /> Edit
+              </button>
+            )}
+          </div>
         </div>
+      )}
+
+      {farmModal && (
+        <FarmModal farm={farmModal === 'new' ? null : farmModal} onClose={() => setFarmModal(null)} onSaved={handleFarmSaved} />
       )}
 
       {/* Nav */}

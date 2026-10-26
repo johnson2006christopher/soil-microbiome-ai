@@ -47,10 +47,6 @@ router.post('/', async (req, res, next) => {
     // Generate recommendations
     const recs = generateSoilRecommendations(reading, mlResult.shapValues || {});
 
-    // Regional average (simplified by crop type)
-    const regionalAverages = { TOMATO: 5.5, CORN: 6.0, MIXED: 5.0 };
-    const regionalAverage = regionalAverages[farm.cropType] || 5.0;
-
     // Save in transaction
     const prediction = await prisma.$transaction(async (tx) => {
       // soilReadingId is unique: re-running on the same reading replaces the old result
@@ -63,7 +59,6 @@ router.post('/', async (req, res, next) => {
           confidenceLow: mlResult.confidenceLow,
           confidenceHigh: mlResult.confidenceHigh,
           yieldCategory: mlResult.yieldCategory,
-          regionalAverage,
           shapValues: mlResult.shapValues || {},
           topFeatures: mlResult.topFeatures || [],
           modelVersion: '1.0.0',

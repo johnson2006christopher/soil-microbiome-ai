@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Camera, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { analyzeImage, getAnalyses, getImageUrl } from '../../api/imageAnalysis';
+import { analyzeImage, getAnalyses, getImageModels } from '../../api/imageAnalysis';
+import AuthImage from '../../components/AuthImage';
 import { useFarm } from '../../contexts/FarmContext';
 import ImageDropzone from '../../components/ImageDropzone';
 import HealthStatusBadge from '../../components/HealthStatusBadge';
@@ -31,8 +32,21 @@ export default function ImageAnalysis() {
   const [histTotal, setHistTotal] = useState(0);
   const [filterType, setFilterType] = useState(null);
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
+  const [availableModels, setAvailableModels] = useState({ soil: true, tomato: true, corn: true });
 
   useEffect(() => { if (activeFarm) loadHistory(); }, [activeFarm, histPage, filterType]);
+
+  useEffect(() => {
+    getImageModels()
+      .then((models) => {
+        setAvailableModels(models);
+        if (!models[datasetType]) {
+          const firstAvailable = ['tomato', 'corn', 'soil'].find((t) => models[t]);
+          if (firstAvailable) setDatasetType(firstAvailable);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   async function loadHistory() {
     try {
@@ -69,7 +83,7 @@ export default function ImageAnalysis() {
       loadHistory();
     } catch (err) {
       clearInterval(interval);
-      const msg = err.response?.data?.detail || err.response?.data?.error || err.message;
+      const msg = err.response?.data?.error || 'Image analysis failed. Please try again.';
       toast.error(msg);
       setStep(0);
     } finally {
@@ -101,10 +115,12 @@ export default function ImageAnalysis() {
               <label className="block text-sm font-medium text-gray-700 mb-2">Dataset Type</label>
               <div className="flex gap-2">
                 {['soil', 'tomato', 'corn'].map((t) => (
-                  <button key={t} onClick={() => setDatasetType(t)}
-                    className={`flex-1 py-2 rounded-xl text-sm font-medium capitalize border transition-all
+                  <button key={t} onClick={() => setDatasetType(t)} disabled={!availableModels[t]}
+                    title={availableModels[t] ? undefined : 'Model coming soon'}
+                    className={`flex-1 py-2 rounded-xl text-sm font-medium capitalize border transition-all disabled:opacity-40 disabled:cursor-not-allowed
                       ${datasetType === t ? 'bg-primary-500 text-white border-primary-500' : 'bg-white text-gray-600 border-gray-300 hover:border-primary-300'}`}>
                     {t}
+                    {!availableModels[t] && <span className="block text-[10px] normal-case font-normal">coming soon</span>}
                   </button>
                 ))}
               </div>
@@ -200,8 +216,10 @@ export default function ImageAnalysis() {
           {history.map((a) => (
             <button key={a.id} onClick={() => setSelectedAnalysis(a)}
               className="text-left group border border-gray-200 rounded-xl overflow-hidden hover:border-primary-300 transition-all">
-              <div className="h-24 bg-gray-100 flex items-center justify-center relative">
-                <Camera size={24} className="text-gray-300" />
+              <div className="h-24 bg-gray-100 flex items-center justify-center relative overflow-hidden">
+                <AuthImage src={`/api/image/analyses/${a.id}/image`} alt={a.originalFilename}
+                  className="w-full h-full object-cover"
+                  fallback={<Camera size={24} className="text-gray-300" />} />
                 <HealthStatusBadge status={a.healthStatus} size="sm" className="absolute top-1 left-1" />
               </div>
               <div className="p-2">

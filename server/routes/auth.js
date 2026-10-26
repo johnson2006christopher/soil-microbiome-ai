@@ -1,8 +1,11 @@
 const express = require('express');
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
 const { auth } = require('../middleware/auth');
+const { generateSimulatedReading } = require('../services/simulator');
 
 const router = express.Router();
 
@@ -45,6 +48,7 @@ router.post('/register', async (req, res, next) => {
           create: {
             name: `${name}'s Farm`,
             location: farmLocation || 'Unknown',
+            sizeHa: farmSizeHa ? parseFloat(farmSizeHa) : null,
             cropType: 'TOMATO',
           },
         },
@@ -76,6 +80,60 @@ router.post('/login', async (req, res, next) => {
     const token = signToken(user.id, user.role, user.tokenVersion);
     const { password: _, ...safeUser } = user;
     res.json({ token, user: safeUser });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/auth/demo — private guest account so public visitors don't share data.
+// Comes with one farm, a simulated device and simulated readings (labelled SIMULATED).
+const demoLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many demo accounts from this network. Please try again later.' },
+});
+
+router.post('/demo', demoLimiter, async (req, res, next) => {
+  try {
+    const suffix = crypto.randomBytes(4).toString('hex');
+    const password = await bcrypt.hash(crypto.randomBytes(24).toString('hex'), 10);
+    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+    const user = await prisma.user.create({
+      data: {
+        name: 'Guest Farmer',
+        email: `guest-${suffix}@guest.soilai.local`,
+        password,
+        farmLocation: 'Arusha, Tanzania',
+        farms: {
+          create: { name: 'Demo Tomato Farm', location: 'Arusha, Tanzania', region: 'Arusha', sizeHa: 2, cropType: 'TOMATO' },
+        },
+      },
+      include: { farms: true },
+    });
+
+    const farm = user.farms[0];
+    const device = await prisma.sensorDevice.create({
+      data: {
+        userId: user.id, farmId: farm.id, deviceName: 'Simulated Field Sensor',
+        deviceSerial: `SIM-${suffix.toUpperCase()}`, deviceType: 'SIMULATED',
+        isOnline: true, firmwareVersion: '1.0.0', lastReadingAt: new Date(),
+      },
+    });
+    // Twelve weekly readings so trends and predictions work immediately
+    await prisma.soilReading.createMany({
+      data: Array.from({ length: 12 }, (_, i) => ({
+        farmId: farm.id, deviceId: device.id, source: 'SIMULATED',
+        readingAt: new Date(Date.now() - (11 - i) * WEEK_MS),
+        ...generateSimulatedReading(),
+      })),
+    });
+
+    const token = signToken(user.id, user.role, user.tokenVersion);
+    const { password: _, farms: __, ...safeUser } = user;
+    res.status(201).json({ token, user: safeUser });
   } catch (err) {
     next(err);
   }

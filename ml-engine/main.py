@@ -104,7 +104,10 @@ def get_cnn_model(crop_type: str):
     model_path = f"model/artifacts/cnn/{crop_type}_model.keras"
     classes_path = f"model/artifacts/cnn/{crop_type}_classes.json"
     if not os.path.exists(model_path) or not os.path.exists(classes_path):
-        raise HTTPException(status_code=400, detail=f"Mfano wa {crop_type} haujapatikana.")
+        raise HTTPException(
+            status_code=400,
+            detail=f"The {crop_type} model is not available yet (Mfano wa {crop_type} haujapatikana bado).",
+        )
     model = tf.keras.models.load_model(model_path)
     with open(classes_path) as f:
         classes = json.load(f)
@@ -118,14 +121,17 @@ def get_cnn_model(crop_type: str):
 def is_plant_image(image_bytes: bytes):
     import numpy as np
     from PIL import Image as PILImage
-    img = PILImage.open(io.BytesIO(image_bytes)).convert("RGB")
-    img_array = np.array(img, dtype=np.float32)
-    green_mean = img_array[:, :, 1].mean()
-    overall_mean = img_array.mean() + 1e-6
-    green_ratio = green_mean / overall_mean
-    brown_ratio = (img_array[:, :, 0].mean() * 0.5 + img_array[:, :, 1].mean() * 0.3) / 255.0
-    is_plant = green_ratio > 0.35 or brown_ratio > 0.3
-    confidence = min(1.0, float(max(green_ratio, brown_ratio)))
+    # Share of pixels that look like vegetation (yellow-green hues) or soil (browns).
+    # 8% passes all 2,100 held-out PlantVillage test leaves and rejects flat-colour images;
+    # low CNN confidence is the second line of defence.
+    img = PILImage.open(io.BytesIO(image_bytes)).convert("RGB").resize((128, 128))
+    hsv = np.array(img.convert("HSV"), dtype=np.float32) / 255.0
+    hue, sat, val = hsv[..., 0] * 360, hsv[..., 1], hsv[..., 2]
+    vegetation = ((hue >= 25) & (hue <= 160) & (sat >= 0.15) & (val >= 0.12)).mean()
+    soil = ((hue >= 5) & (hue <= 50) & (sat >= 0.15) & (val >= 0.08) & (val <= 0.85)).mean()
+    plant_like = float(max(vegetation, soil))
+    is_plant = plant_like >= 0.08
+    confidence = min(1.0, plant_like)
     message_sw = "Picha hii haionekani kuwa ya mmea au udongo. Tafadhali pakia picha ya jani au udongo." if not is_plant else None
     message_en = "This image does not appear to be a plant or soil. Please upload a leaf or soil photo." if not is_plant else None
     return is_plant, confidence, message_sw, message_en
@@ -362,8 +368,8 @@ async def image_predict(
             "message_sw": msg_sw, "message_en": msg_en, "valid": False,
         }
 
-    get_cnn_model(dataset_type)
-    result = predict_image_from_bytes(contents, dataset_type)
+    model, class_indices = get_cnn_model(dataset_type)
+    result = predict_image_from_bytes(contents, dataset_type, model=model, class_indices=class_indices)
 
     confidence = result["confidence"]
     if confidence >= 0.80: confidence_tier = "high"

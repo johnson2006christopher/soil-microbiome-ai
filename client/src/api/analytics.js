@@ -1,7 +1,7 @@
 import axiosClient from './axiosClient';
 
-export const getDashboardStats = () =>
-  axiosClient.get('/api/analytics/dashboard').then(r => r.data);
+export const getDashboardStats = (farmId) =>
+  axiosClient.get('/api/analytics/dashboard', { params: { farmId } }).then(r => r.data);
 
 export const getModelPerformance = () =>
   axiosClient.get('/api/analytics/model-performance').then(r => r.data);
