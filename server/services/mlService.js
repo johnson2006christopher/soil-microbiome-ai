@@ -17,14 +17,29 @@ if (process.env.ML_ENGINE_API_KEY) {
   mlTrain.defaults.headers.common['X-Internal-Key'] = process.env.ML_ENGINE_API_KEY;
 }
 
+// Turn an ML engine failure into an error that is safe to show to users.
+// 4xx from the engine carries a user-facing detail (e.g. model not available).
+function userFacingError(err, fallback) {
+  const status = err.response?.status;
+  const detail = err.response?.data?.detail;
+  const error = new Error(
+    status && status < 500 && typeof detail === 'string'
+      ? detail
+      : 'The AI service is temporarily unavailable. Please try again in a moment.'
+  );
+  error.status = status && status < 500 ? 422 : 503;
+  error.expose = true;
+  error.cause = `${fallback}: ${detail || err.message}`;
+  return error;
+}
+
 const mlService = {
   async predictYield(sensorData) {
     try {
       const { data } = await mlPredict.post('/tabular/predict', sensorData);
       return data;
     } catch (err) {
-      const detail = err.response?.data?.detail || err.message;
-      throw new Error(`Yield prediction failed: ${detail}`);
+      throw userFacingError(err, 'Yield prediction failed');
     }
   },
 
@@ -39,8 +54,7 @@ const mlService = {
       );
       return data;
     } catch (err) {
-      const detail = err.response?.data?.detail || err.message;
-      throw new Error(`Image analysis failed: ${detail}`);
+      throw userFacingError(err, 'Image analysis failed');
     }
   },
 
