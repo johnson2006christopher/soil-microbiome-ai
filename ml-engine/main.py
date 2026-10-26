@@ -368,8 +368,8 @@ async def image_predict(
             "message_sw": msg_sw, "message_en": msg_en, "valid": False,
         }
 
-    get_cnn_model(dataset_type)
-    result = predict_image_from_bytes(contents, dataset_type)
+    model, class_indices = get_cnn_model(dataset_type)
+    result = predict_image_from_bytes(contents, dataset_type, model=model, class_indices=class_indices)
 
     confidence = result["confidence"]
     if confidence >= 0.80: confidence_tier = "high"
