@@ -56,7 +56,7 @@ export default function Overview() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-800">Overview</h2>
         <div className="flex gap-2">
-          <button onClick={() => navigate('/dashboard/sensor')} className="flex items-center gap-1.5 px-3 py-2 bg-primary-50 text-primary-700 rounded-xl text-sm font-medium hover:bg-primary-100">
+          <button onClick={() => navigate('/dashboard/sensor?tab=manual')} className="flex items-center gap-1.5 px-3 py-2 bg-primary-50 text-primary-700 rounded-xl text-sm font-medium hover:bg-primary-100">
             <Plus size={16} /> Add Reading
           </button>
           <button onClick={() => navigate('/dashboard/image-analysis')} className="flex items-center gap-1.5 px-3 py-2 bg-purple-50 text-purple-700 rounded-xl text-sm font-medium hover:bg-purple-100">
