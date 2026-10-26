@@ -104,7 +104,10 @@ def get_cnn_model(crop_type: str):
     model_path = f"model/artifacts/cnn/{crop_type}_model.keras"
     classes_path = f"model/artifacts/cnn/{crop_type}_classes.json"
     if not os.path.exists(model_path) or not os.path.exists(classes_path):
-        raise HTTPException(status_code=400, detail=f"Mfano wa {crop_type} haujapatikana.")
+        raise HTTPException(
+            status_code=400,
+            detail=f"The {crop_type} model is not available yet (Mfano wa {crop_type} haujapatikana bado).",
+        )
     model = tf.keras.models.load_model(model_path)
     with open(classes_path) as f:
         classes = json.load(f)
