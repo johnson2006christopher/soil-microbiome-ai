@@ -12,6 +12,8 @@ function rand(min, max, decimals = 1) {
   return parseFloat((Math.random() * (max - min) + min).toFixed(decimals));
 }
 function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+const CLEAN = process.argv.includes('--clean');
+
 function daysAgo(n) { return new Date(Date.now() - n * 24 * 60 * 60 * 1000); }
 
 async function main() {
@@ -224,6 +226,9 @@ async function main() {
     );
     readingIds.push(...readings.map((r) => r.id));
     console.log(`    ✓ 30 soil readings (correlated agronomic patterns)`);
+
+    // --clean: no invented AI results; predictions/analyses come only from real model runs
+    if (CLEAN) continue;
 
     // 10 Image Analyses
     const samples = imageSamples[farm.cropType] || imageSamples.MIXED;
