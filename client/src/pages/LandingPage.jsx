@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 
 const STEPS = [
   { n: 1, icon: Cpu,         title: 'Connect Sensors',      desc: 'Arduino/ESP32 captures real-time soil data — pH, NPK, moisture, microbiome' },
-  { n: 2, icon: Camera,      title: 'Upload Crop Images',   desc: 'Photograph soil, tomato, or corn crops for CNN health classification' },
+  { n: 2, icon: Camera,      title: 'Upload Crop Images',   desc: 'Photograph tomato or maize leaves for CNN disease classification' },
   { n: 3, icon: FlaskConical,title: 'AI Analysis',          desc: 'Two independent models run in parallel: regression + image classification' },
   { n: 4, icon: TrendingUp,  title: 'Yield Prediction',     desc: 'Ensemble of RF + GBM + XGBoost predicts crop yield in tons/ha with SHAP' },
   { n: 5, icon: BarChart2,   title: 'Act on Insights',      desc: 'Receive actionable agronomic recommendations for soil and crop health' },
@@ -25,9 +25,9 @@ export default function LandingPage() {
       if (msg) {
         toast.error(msg);
       } else if (err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
-        toast.error('Cannot reach the server. Make sure the backend is running on port 5000.');
+        toast.error('Cannot reach the server. Please check your connection and try again.');
       } else {
-        toast.error('Demo login failed. Run: cd server && npm run seed');
+        toast.error('Demo login is unavailable right now. Please try again shortly.');
       }
     }
   };
@@ -75,7 +75,7 @@ export default function LandingPage() {
 
       {/* Stats bar */}
       <div className="bg-primary-900 text-white py-4 px-8 flex justify-center gap-12 flex-wrap text-sm">
-        {['2 Independent AI Models', 'Real-Time ESP32 Sensors', '3 Crop Types Supported', 'SHAP Explainability'].map((s) => (
+        {['2 Independent AI Models', 'ESP32 Sensor Support', 'Tomato & Maize Disease Detection', 'SHAP Explainability'].map((s) => (
           <span key={s} className="font-medium opacity-80">✓ {s}</span>
         ))}
       </div>
@@ -95,7 +95,7 @@ export default function LandingPage() {
                 <h3 className="font-bold text-gray-800 text-lg">Tabular Regression</h3>
               </div>
             </div>
-            <p className="text-gray-600 mb-4">Trained on real-time soil sensor data. Ensemble of Random Forest + Gradient Boosting + XGBoost predicts crop yield in tons/ha.</p>
+            <p className="text-gray-600 mb-4">Ensemble of Random Forest + Gradient Boosting + XGBoost predicts crop yield in tons/ha from soil readings. Currently a prototype trained on synthetic data while real harvest records are collected.</p>
             <ul className="space-y-2">
               {['24 soil & microbiome features', 'SHAP feature importance', 'Confidence intervals', 'Nutrient deficiency detection'].map(f => (
                 <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><span className="text-green-500">✓</span>{f}</li>
@@ -110,9 +110,9 @@ export default function LandingPage() {
                 <h3 className="font-bold text-gray-800 text-lg">CNN Image Classification</h3>
               </div>
             </div>
-            <p className="text-gray-600 mb-4">EfficientNetB0 with transfer learning classifies soil and crop images into health categories with yield impact notes.</p>
+            <p className="text-gray-600 mb-4">EfficientNetB0 with transfer learning classifies tomato and maize leaf photos into disease and health categories with yield impact notes.</p>
             <ul className="space-y-2">
-              {['Soil, Tomato & Corn datasets', '18 disease/health classes', 'Confidence scoring', 'Treatment recommendations'].map(f => (
+              {['Tomato & maize models (PlantVillage)', '14 disease/health classes', 'Accuracy measured on held-out images', 'Soil image model coming soon'].map(f => (
                 <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><span className="text-green-500">✓</span>{f}</li>
               ))}
             </ul>
@@ -146,7 +146,7 @@ export default function LandingPage() {
       {/* CTA */}
       <section className="bg-primary-600 text-white py-16 px-6 text-center">
         <h2 className="text-3xl font-bold mb-4">Ready to transform your farm?</h2>
-        <p className="text-primary-100 mb-8 max-w-md mx-auto">Join farmers using AI to make data-driven decisions on soil health and crop yield.</p>
+        <p className="text-primary-100 mb-8 max-w-md mx-auto">Use AI to make data-driven decisions on soil health and crop yield.</p>
         <button onClick={() => navigate('/register')}
           className="px-8 py-4 bg-white text-primary-700 font-bold rounded-2xl hover:bg-gray-50 inline-flex items-center gap-2 shadow-lg">
           Start for Free <ArrowRight size={18} />
@@ -154,7 +154,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="bg-gray-900 text-gray-400 text-center py-6 text-sm">
-        © 2025 SoilAI — AI-Assisted Soil Microbiome Analysis System
+        © {new Date().getFullYear()} SoilAI — AI-Assisted Soil Microbiome Analysis System
       </footer>
     </div>
   );
