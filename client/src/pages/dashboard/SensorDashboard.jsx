@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useFarm } from '../../contexts/FarmContext';
 import { useSocket } from '../../hooks/useSocket';
 import { getReadings, createReading } from '../../api/soilReadings';
-import { getDevices, createDevice, simulateReading, ingestReading } from '../../api/devices';
+import { getDevices, createDevice, simulateReading, sendSimulatedReading } from '../../api/devices';
 import LiveReadingTicker from '../../components/LiveReadingTicker';
 import SensorReadingCard from '../../components/SensorReadingCard';
 import SoilGauge from '../../components/SoilGauge';
@@ -101,15 +101,12 @@ export default function SensorDashboard() {
 
   async function handleSimulatePing(device) {
     try {
-      await ingestReading(device.deviceSerial, {
-        soilMoisture: 52, soilTemperature: 24, soilPh: 6.5,
-        electricalConductivity: 1.2, organicMatter: 3.5,
-        nitrogenPpm: 35, phosphorusPpm: 22, potassiumPpm: 180,
-        ambientTemperature: 28, humidity: 65,
-      });
-      toast.success(`Reading received from ${device.deviceSerial}`);
+      await sendSimulatedReading(device.id);
+      toast.success(`Simulated reading stored for ${device.deviceSerial}`);
       loadDevices();
-    } catch { toast.error('Ping failed'); }
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Could not send simulated reading');
+    }
   }
 
   const r = displayReading || {};
@@ -260,7 +257,7 @@ export default function SensorDashboard() {
                 )}
                 <button onClick={() => handleSimulatePing(d)}
                   className="w-full py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200">
-                  Simulate Ping
+                  Send Simulated Reading
                 </button>
               </div>
             ))}
