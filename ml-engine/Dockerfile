@@ -4,4 +4,5 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN mkdir -p data/soil data/tomato data/corn model/artifacts/tabular model/artifacts/cnn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Bind IPv6 too: Railway's private network is IPv6-only
+CMD ["uvicorn", "main:app", "--host", "::", "--port", "8000"]
