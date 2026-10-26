@@ -15,5 +15,5 @@ export const deleteDevice = (id) =>
 export const simulateReading = (id) =>
   axiosClient.get(`/api/devices/${id}/simulate`).then(r => r.data);
 
-export const ingestReading = (deviceSerial, data) =>
-  axiosClient.post(`/api/devices/${deviceSerial}/ingest`, data).then(r => r.data);
+export const sendSimulatedReading = (id) =>
+  axiosClient.post(`/api/devices/${id}/simulate-reading`).then(r => r.data);
