@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Wifi, WifiOff, Plus, Zap, Battery } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useFarm } from '../../contexts/FarmContext';
@@ -38,7 +39,8 @@ const FIELD_GROUPS = {
 };
 
 export default function SensorDashboard() {
-  const [tab, setTab] = useState('live');
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState(searchParams.get('tab') || 'live');
   const { activeFarm } = useFarm();
   const { latestReading, isConnected } = useSocket(activeFarm?.id);
   const [displayReading, setDisplayReading] = useState(null);
