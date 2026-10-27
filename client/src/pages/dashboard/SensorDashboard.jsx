@@ -143,7 +143,7 @@ export default function SensorDashboard() {
               {/* Gauges for key values */}
               <div className="flex gap-6 flex-wrap">
                 <SoilGauge value={r.soilMoisture} label="Moisture" unit="%" />
-                <SoilGauge value={r.soilPh ? (r.soilPh / 14) * 100 : 0} label={`pH ${r.soilPh?.toFixed(2) || '—'}`} unit="" />
+                <SoilGauge value={r.soilPh} max={14} optimalMin={5.5} optimalMax={7.5} label="Soil pH" unit="" />
                 <SoilGauge value={r.humidity} label="Humidity" unit="%" />
               </div>
 
