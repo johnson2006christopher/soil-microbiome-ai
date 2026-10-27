@@ -4,7 +4,7 @@ import { TrendingUp, Camera, Cpu, BarChart2, Plus } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getDashboardStats } from '../../api/analytics';
 import { getPredictions } from '../../api/predictions';
-import { getTrends } from '../../api/soilReadings';
+import { getTrends, getReadings } from '../../api/soilReadings';
 import { useFarm } from '../../contexts/FarmContext';
 import { useSocket } from '../../hooks/useSocket';
 import StatCard from '../../components/StatCard';
@@ -20,6 +20,7 @@ export default function Overview() {
   const [stats, setStats] = useState(null);
   const [trends, setTrends] = useState([]);
   const [predictions, setPredictions] = useState([]);
+  const [storedReading, setStoredReading] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,12 +28,14 @@ export default function Overview() {
       if (!activeFarm) return;
       setLoading(true);
       try {
-        const [s, t, p] = await Promise.all([
+        const [s, t, p, r] = await Promise.all([
           getDashboardStats(activeFarm.id),
           getTrends(activeFarm.id).catch(() => []),
           getPredictions(activeFarm.id, 1, 30).catch(() => ({ predictions: [] })),
+          getReadings(activeFarm.id, 1, 1).catch(() => ({ readings: [] })),
         ]);
         setStats(s);
+        setStoredReading(r.readings?.[0] || null);
         setTrends(t || []);
         setPredictions(p.predictions || []);
       } catch (err) {
@@ -69,7 +72,8 @@ export default function Overview() {
       </div>
 
       {/* Live ticker */}
-      <LiveReadingTicker reading={latestReading} isConnected={isConnected} />
+      {/* Until a live reading arrives, show the most recent stored one */}
+      <LiveReadingTicker reading={latestReading || storedReading} isConnected={isConnected} />
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
