@@ -10,7 +10,9 @@ export default function LanguageToggle({ className = '' }) {
       aria-label={lang === 'en' ? 'Badilisha lugha kuwa Kiswahili' : 'Switch language to English'}
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${className}`}>
       <Languages size={15} aria-hidden="true" />
-      {t('lang.toggle')}
+      <span className="hidden sm:inline">{t('lang.toggle')}</span>
+      {/* Short code on phones so the header keeps room for the farm name */}
+      <span className="sm:hidden">{lang === 'en' ? 'SW' : 'EN'}</span>
     </button>
   );
 }
