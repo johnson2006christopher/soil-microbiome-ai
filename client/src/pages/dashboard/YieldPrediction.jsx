@@ -9,6 +9,7 @@ import LoadingSteps from '../../components/LoadingSteps';
 import FeatureImportanceChart from '../../components/FeatureImportanceChart';
 import RecommendationCard from '../../components/RecommendationCard';
 import { featureLabel } from '../../utils/labels';
+import EmptyState from '../../components/EmptyState';
 
 const PRED_STEPS = [
   'Loading soil parameters...',
@@ -108,13 +109,9 @@ export default function YieldPrediction() {
       </div>
 
       {readingsLoaded && !latestReading && (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-5 text-center text-sm text-gray-600">
-          This farm has no soil readings yet.{' '}
-          <Link to="/dashboard/sensor?tab=manual" className="font-semibold text-primary-600 hover:underline">
-            Add a soil reading
-          </Link>{' '}
-          to run a prediction.
-        </div>
+        <EmptyState title="This farm has no soil readings yet"
+          body="A prediction needs at least one soil reading."
+          action={<Link to="/dashboard/sensor?tab=manual" className="inline-block px-4 py-2 rounded-full bg-shamba text-white text-sm font-semibold hover:bg-primary-600">Add a soil reading</Link>} />
       )}
 
       {/* Latest Reading Summary */}
