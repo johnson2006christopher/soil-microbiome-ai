@@ -229,15 +229,28 @@ def get_yield_impact_note(predicted_class: str) -> str:
         return f"Condition '{predicted_class}' detected. Monitor crop closely and consult agronomist."
 
 
+# Health status follows how serious the condition is (mirrors the recommendation
+# severities in server/services/recommendationEngine.js), not model confidence.
+_CRITICAL_PATTERNS = ("late_blight", "yellow_leaf_curl", "degrad", "waterlog")
+_DISEASED_PATTERNS = ("early_blight", "northern_leaf_blight", "bacterial_spot",
+                      "spider_mite", "mosaic_virus", "dry")
+_AT_RISK_PATTERNS = ("common_rust", "leaf_mold", "septoria", "target_spot", "cercospora")
+
+
 def get_health_status(predicted_class: str, confidence: float) -> str:
     """
     Pattern-based health status mapping. Works with any class name format.
+    Low-confidence results are capped at AT_RISK.
     """
-    if "healthy" in predicted_class.lower():
+    c = predicted_class.lower().replace(" ", "_")
+    if "healthy" in c:
         return "HEALTHY"
-    elif confidence < 0.6:
+    if confidence < 0.6:
         return "AT_RISK"
-    elif confidence < 0.85:
-        return "DISEASED"
-    else:
+    if any(p in c for p in _CRITICAL_PATTERNS):
         return "CRITICAL"
+    if any(p in c for p in _DISEASED_PATTERNS):
+        return "DISEASED"
+    if any(p in c for p in _AT_RISK_PATTERNS):
+        return "AT_RISK"
+    return "DISEASED"
