@@ -11,6 +11,7 @@ import StatCard from '../../components/StatCard';
 import LiveReadingTicker from '../../components/LiveReadingTicker';
 import RecommendationCard from '../../components/RecommendationCard';
 import HealthStatusBadge from '../../components/HealthStatusBadge';
+import EmptyState from '../../components/EmptyState';
 
 export default function Overview() {
   const { activeFarm } = useFarm();
@@ -98,7 +99,9 @@ export default function Overview() {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-40 text-gray-400 text-sm">No prediction data yet</div>
+            <EmptyState compact title="No predictions yet"
+              body="Run a yield prediction to start tracking this farm."
+              action={<button onClick={() => navigate('/dashboard/yield-prediction')} className="px-4 py-2 rounded-full bg-shamba text-white text-sm font-semibold hover:bg-primary-600">Run a prediction</button>} />
           )}
         </div>
 
@@ -115,7 +118,9 @@ export default function Overview() {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-40 text-gray-400 text-sm">No trend data yet</div>
+            <EmptyState compact title="No soil readings yet"
+              body="Weekly pH trends appear once readings are recorded."
+              action={<button onClick={() => navigate('/dashboard/sensor?tab=manual')} className="px-4 py-2 rounded-full bg-shamba text-white text-sm font-semibold hover:bg-primary-600">Add a reading</button>} />
           )}
         </div>
       </div>
