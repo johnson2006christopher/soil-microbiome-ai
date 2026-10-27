@@ -8,6 +8,7 @@ import { useFarm } from '../../contexts/FarmContext';
 import LoadingSteps from '../../components/LoadingSteps';
 import FeatureImportanceChart from '../../components/FeatureImportanceChart';
 import RecommendationCard from '../../components/RecommendationCard';
+import { featureLabel } from '../../utils/labels';
 
 const PRED_STEPS = [
   'Loading soil parameters...',
@@ -234,7 +235,7 @@ export default function YieldPrediction() {
                             <span className={`font-mono font-bold ${f.shapValue >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                               {f.shapValue >= 0 ? '+' : ''}{f.shapValue?.toFixed(3)}
                             </span>
-                            <span className="text-gray-600 text-xs">{f.feature.replace(/([A-Z])/g, ' $1').trim()}</span>
+                            <span className="text-gray-600 text-xs">{featureLabel(f.feature)}</span>
                           </li>
                         ))}
                         {items.length === 0 && <li className="text-xs text-gray-400">No data</li>}

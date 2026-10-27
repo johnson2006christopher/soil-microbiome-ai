@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { analyzeImage, getAnalyses, getImageModels } from '../../api/imageAnalysis';
 import AuthImage from '../../components/AuthImage';
+import { formatClassName } from '../../utils/labels';
 import { useFarm } from '../../contexts/FarmContext';
 import ImageDropzone from '../../components/ImageDropzone';
 import HealthStatusBadge from '../../components/HealthStatusBadge';
@@ -152,7 +153,7 @@ export default function ImageAnalysis() {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <HealthStatusBadge status={result.healthStatus} size="lg" />
-                    <h3 className="font-bold text-gray-800 text-xl mt-2">{result.predictedClass?.replace(/___/g, ' › ')}</h3>
+                    <h3 className="font-bold text-gray-800 text-xl mt-2">{formatClassName(result.predictedClass)}</h3>
                   </div>
                   <ConfidenceRing confidence={result.confidence} healthStatus={result.healthStatus} size={90} />
                 </div>
@@ -252,7 +253,7 @@ export default function ImageAnalysis() {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <HealthStatusBadge status={selectedAnalysis.healthStatus} size="lg" />
-                <h3 className="font-bold text-gray-800 text-lg mt-2">{selectedAnalysis.predictedClass?.replace(/___/g, ' › ')}</h3>
+                <h3 className="font-bold text-gray-800 text-lg mt-2">{formatClassName(selectedAnalysis.predictedClass)}</h3>
                 <p className="text-sm text-gray-400">{new Date(selectedAnalysis.analyzedAt).toLocaleString()}</p>
               </div>
               <ConfidenceRing confidence={selectedAnalysis.confidence} healthStatus={selectedAnalysis.healthStatus} size={70} />

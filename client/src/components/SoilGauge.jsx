@@ -1,10 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 
-export default function SoilGauge({ value = 0, label = '', unit = '%' }) {
-  const clamp = Math.min(100, Math.max(0, value));
+// `max` sets the scale (e.g. 14 for pH). With optimalMin/optimalMax the colour is
+// green inside that range and amber outside it; otherwise it follows the fill level.
+export default function SoilGauge({ value = 0, label = '', unit = '%', max = 100, optimalMin, optimalMax }) {
+  const num = typeof value === 'number' ? value : 0;
+  const clamp = Math.min(100, Math.max(0, (num / max) * 100));
   const angle = -135 + (clamp / 100) * 270;
 
-  const color = clamp < 30 ? '#dc2626' : clamp < 60 ? '#ca8a04' : '#16a34a';
+  const hasOptimal = optimalMin !== undefined && optimalMax !== undefined;
+  const color = hasOptimal
+    ? (num >= optimalMin && num <= optimalMax ? '#16a34a' : '#ca8a04')
+    : clamp < 30 ? '#dc2626' : clamp < 60 ? '#ca8a04' : '#16a34a';
 
   // Arc path helpers
   const polarToXY = (deg, r) => {

@@ -63,16 +63,29 @@ export default function SensorDashboard() {
     } catch {}
   }
 
+  // Live Feed: store a SIMULATED reading so it shows live and can be predicted on
   async function handleSimulate() {
     const dev = devices[0];
-    if (!dev) return toast.error('No device registered for this farm');
+    if (!dev) return toast.error('Register a device first (Devices tab)');
+    try {
+      const reading = await sendSimulatedReading(dev.id);
+      setDisplayReading(reading);
+      toast.success('Simulated reading stored');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Could not create a simulated reading');
+    }
+  }
+
+  // Manual Entry: pre-fill the form with sample values the user can edit
+  async function handleFillSample() {
+    const dev = devices[0];
+    if (!dev) return toast.error('Register a device first (Devices tab)');
     try {
       const res = await simulateReading(dev.id);
-      setDisplayReading(res.simulatedReading);
       setForm(res.simulatedReading);
-      toast.success('Simulated reading loaded');
+      toast.success('Form filled with sample values');
     } catch (err) {
-      toast.error('Simulation failed');
+      toast.error('Could not load sample values');
     }
   }
 
@@ -143,7 +156,7 @@ export default function SensorDashboard() {
               {/* Gauges for key values */}
               <div className="flex gap-6 flex-wrap">
                 <SoilGauge value={r.soilMoisture} label="Moisture" unit="%" />
-                <SoilGauge value={r.soilPh ? (r.soilPh / 14) * 100 : 0} label={`pH ${r.soilPh?.toFixed(2) || '—'}`} unit="" />
+                <SoilGauge value={r.soilPh} max={14} optimalMin={5.5} optimalMax={7.5} label="Soil pH" unit="" />
                 <SoilGauge value={r.humidity} label="Humidity" unit="%" />
               </div>
 
@@ -172,9 +185,9 @@ export default function SensorDashboard() {
         <form onSubmit={handleManualSubmit} className="space-y-6 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
           <div className="flex justify-between items-center">
             <h3 className="font-semibold text-gray-800">Add Soil Reading</h3>
-            <button type="button" onClick={handleSimulate}
+            <button type="button" onClick={handleFillSample}
               className="text-sm text-primary-600 hover:underline flex items-center gap-1">
-              <Zap size={14} /> Auto-fill from Sensor
+              <Zap size={14} /> Fill with sample values
             </button>
           </div>
 

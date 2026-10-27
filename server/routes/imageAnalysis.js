@@ -115,7 +115,7 @@ router.get('/analyses', async (req, res, next) => {
         orderBy: { analyzedAt: 'desc' },
         skip,
         take: parseInt(limit),
-        include: { recommendations: true },
+        include: { recommendations: true, farm: { select: { name: true } } },
       }),
       prisma.imageAnalysis.count({ where }),
     ]);

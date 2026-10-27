@@ -8,7 +8,9 @@ export default function StatCard({ title, value, unit, trend, icon: Icon, color 
     blue:    'from-blue-500 to-blue-600',
     orange:  'from-orange-500 to-orange-600',
     red:     'from-red-500 to-red-600',
+    purple:  'from-purple-500 to-purple-600',
   };
+  const hasValue = value !== null && value !== undefined && value !== '—';
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
@@ -16,8 +18,8 @@ export default function StatCard({ title, value, unit, trend, icon: Icon, color 
         <div className="flex-1">
           <p className="text-sm text-gray-500 font-medium">{title}</p>
           <p className="text-3xl font-bold text-gray-900 mt-1">
-            {value ?? '—'}
-            {unit && <span className="text-lg font-normal text-gray-500 ml-1">{unit}</span>}
+            {hasValue ? value : '—'}
+            {unit && hasValue && <span className="text-lg font-normal text-gray-500 ml-1">{unit}</span>}
           </p>
           {trend !== undefined && (
             <div className={`flex items-center gap-1 mt-2 text-sm font-medium ${trend > 0 ? 'text-green-600' : trend < 0 ? 'text-red-600' : 'text-gray-500'}`}>

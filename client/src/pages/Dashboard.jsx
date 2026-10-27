@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FarmProvider, useFarm } from '../contexts/FarmContext';
@@ -8,6 +8,7 @@ import Navbar from '../components/Navbar';
 function DashboardLayout() {
   const { isAuthenticated, loading } = useAuth();
   const { farms } = useFarm();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // Also accept a token already in localStorage — covers the one-render gap
   // between setToken() being called and React finishing the state update.
@@ -30,10 +31,13 @@ function DashboardLayout() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
+      <Sidebar mobileOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+      {mobileNavOpen && (
+        <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setMobileNavOpen(false)} />
+      )}
       <div className="flex-1 flex flex-col min-w-0">
-        <Navbar isDeviceOnline={hasOnlineDevice} />
-        <main className="flex-1 p-6 overflow-auto">
+        <Navbar isDeviceOnline={hasOnlineDevice} onMenuClick={() => setMobileNavOpen(true)} />
+        <main className="flex-1 p-4 md:p-6 overflow-auto">
           <Outlet />
         </main>
       </div>

@@ -7,6 +7,8 @@ export function useSocket(farmId) {
   const socketRef = useRef(null);
 
   useEffect(() => {
+    // Drop the previous farm's live reading when switching farms
+    setLatestReading(null);
     if (!farmId) return;
 
     const token = localStorage.getItem('token');
