@@ -150,7 +150,7 @@ export default function YieldPrediction() {
 
       {/* Predict Button */}
       <button onClick={handlePredict} disabled={predicting || !activeFarm || !latestReading}
-        className="w-full py-5 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl font-bold text-lg hover:from-primary-600 hover:to-primary-700 disabled:opacity-60 shadow-lg flex items-center justify-center gap-3 transition-all">
+        className="w-full py-4 sm:py-5 bg-shamba text-white rounded-2xl font-display font-bold text-lg hover:bg-primary-600 disabled:opacity-60 shadow-[0_6px_0_#1f4d3a] active:translate-y-[3px] active:shadow-[0_3px_0_#1f4d3a] flex items-center justify-center gap-3 transition">
         <Cpu size={24} />
         {predicting ? 'Running AI Models...' : 'Run Yield Prediction'}
       </button>
