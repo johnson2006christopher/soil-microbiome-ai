@@ -63,7 +63,9 @@ docker-compose exec server npm run seed
 
 Open **http://localhost:3000**
 
-**Demo login:** `demo@farm.ai` / `demo1234`
+**Demo login (local only):** `demo@farm.ai` / `demo1234`. In production, seed with
+`DEMO_PASSWORD=<secret> node scripts/seed.js --clean` so the presenter account is not guessable.
+Visitors use **Try Demo**, which creates a private guest account with simulated readings.
 
 ---
 
@@ -159,6 +161,21 @@ ml-engine/data/
 
 **Compatible with PlantVillage dataset** (available on Kaggle).
 The class folder names become class labels automatically.
+
+To build the tomato and corn datasets from the original PlantVillage repository
+(CC BY-SA 3.0 — cite Mohanty, Hughes & Salathé, 2016) with a held-out test split:
+
+```bash
+git clone --filter=blob:none --no-checkout --depth 1 https://github.com/spMohanty/PlantVillage-Dataset.git
+cd PlantVillage-Dataset && git sparse-checkout init --no-cone
+printf '/raw/color/Tomato___*/\n/raw/color/Corn_(maize)___*/\n' > .git/info/sparse-checkout && git checkout
+cd <repo>/ml-engine
+python scripts/prepare_plantvillage.py <PlantVillage-Dataset>/raw/color   # data/<crop> + data/test/<crop>
+python -c "from model.cnn_trainer import train_cnn_model; train_cnn_model('tomato')"
+python scripts/evaluate_cnn.py tomato                                     # held-out test accuracy
+```
+
+No public soil image dataset is used yet; the soil model is "coming soon".
 
 > The model will skip any dataset folder that has no images and log a clear warning.
 
@@ -258,7 +275,7 @@ DELETE /api/soil-readings/:id        Delete reading
 
 ### AI — Yield Prediction (Model 1)
 ```
-POST   /api/predict        Run ensemble prediction on latest reading
+POST   /api/predictions    Run ensemble prediction on latest reading
 GET    /api/predictions?farmId=   Paginated history
 PATCH  /api/predictions/:id/actual  Enter actual yield for accuracy tracking
 ```
@@ -290,21 +307,31 @@ GET    /health             Health check
 
 ---
 
-## Model Performance (Post-Training)
+## Model Performance (measured)
 
-### Tabular Regression (on your dataset)
-| Metric | Expected Range |
+### CNN Classification — PlantVillage, held-out test split
+Images in the test split were never used for training or checkpoint selection
+(`scripts/evaluate_cnn.py`). PlantVillage photos are close-up lab images, so
+accuracy on field photos is expected to be lower.
+
+| Model | Classes | Test images | Test accuracy |
+|-------|---------|-------------|---------------|
+| Tomato | 10 | 1,500 | 93.3% |
+| Corn (maize) | 4 | 600 | 95.3% |
+| Soil | — | — | not trained (no dataset yet) |
+
+### Tabular Yield Regression — prototype
+No real harvest data is available yet. The model is trained on 1,500 **synthetic**
+rows generated from agronomic rules (`scripts/make_synthetic_dataset.py`), so its
+scores describe fit to synthetic data, not real-world accuracy.
+
+| Metric (5-fold CV, synthetic) | Ensemble |
 |--------|---------------|
-| RMSE   | 0.3 – 0.6 t/ha |
-| MAE    | 0.2 – 0.45 t/ha |
-| R²     | 0.85 – 0.95 |
+| RMSE   | 0.73 t/ha |
+| MAE    | 0.58 t/ha |
+| R²     | 0.35 |
 
-### CNN Classification (PlantVillage dataset)
-| Dataset | Expected Accuracy |
-|---------|------------------|
-| Tomato  | 92–96% |
-| Corn    | 90–94% |
-| Soil    | 85–93% |
+Real farm yield records are the top data priority (see `ROADMAP.md`).
 
 ---
 
@@ -349,6 +376,6 @@ soil-microbiome-ai/
 
 ## Support
 
-- Issues: https://github.com/anthropics/claude-code/issues
-- Demo: `demo@farm.ai` / `demo1234`
+- Issues: https://github.com/johnson2006christopher/soil-microbiome-ai/issues
+- Demo: **Try Demo** on the landing page (private guest account)
 - ML Engine docs: http://localhost:8000/docs (Swagger UI auto-generated)
