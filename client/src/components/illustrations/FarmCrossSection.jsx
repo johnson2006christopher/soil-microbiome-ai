@@ -55,6 +55,7 @@ function MaizePlant({ x, h = 150 }) {
 }
 
 function Callout({ x, y, lx, ly, label = '' }) {
+  if (!label) return null;
   // Approximate pill width from the label length (SVG text cannot be measured before render)
   const w = label.length * 8.9 + 30;
   return (
