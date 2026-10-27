@@ -4,7 +4,6 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
-const path = require('path');
 const rateLimit = require('express-rate-limit');
 const prisma = require('./lib/prisma');
 
@@ -80,9 +79,6 @@ const apiLimiter = rateLimit({
   message: { error: 'Too many requests, please try again later.' },
 });
 app.use('/api', apiLimiter);
-
-// Static uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ── Routes ────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
