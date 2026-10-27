@@ -114,7 +114,7 @@ export default function Overview() {
                 <XAxis dataKey="week" tick={{ fontSize: 11 }} />
                 <YAxis domain={[4, 9]} tick={{ fontSize: 11 }} />
                 <Tooltip />
-                <Line type="monotone" dataKey="ph" stroke="#2563eb" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="ph" stroke="#3e8e5a" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           ) : (
