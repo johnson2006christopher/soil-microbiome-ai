@@ -87,9 +87,10 @@ router.post('/login', async (req, res, next) => {
 
 // POST /api/auth/demo — private guest account so public visitors don't share data.
 // Comes with one farm, a simulated device and simulated readings (labelled SIMULATED).
+// Generous enough for a venue where many visitors share one Wi-Fi address
 const demoLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 10,
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many demo accounts from this network. Please try again later.' },
