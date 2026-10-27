@@ -22,7 +22,7 @@ export default function LiveReadingTicker({ reading, isConnected }) {
   ] : [];
 
   return (
-    <div className={`flex items-center gap-4 bg-gray-900 text-white rounded-xl px-4 py-3 transition-all ${animate ? 'ring-2 ring-green-400' : ''}`}>
+    <div className={`flex items-center gap-4 bg-mlima text-white rounded-xl px-4 py-3 transition-all ${animate ? 'ring-2 ring-green-400' : ''}`}>
       <div className="flex items-center gap-2 flex-shrink-0">
         {isConnected
           ? <><span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /><Wifi size={14} className="text-green-400" /></>
