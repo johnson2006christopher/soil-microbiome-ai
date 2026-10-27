@@ -53,7 +53,13 @@ export default function SensorDashboard() {
   useEffect(() => { if (latestReading) setDisplayReading(latestReading); }, [latestReading]);
 
   useEffect(() => {
-    if (activeFarm) loadDevices();
+    if (!activeFarm) return;
+    loadDevices();
+    // Start the Live Feed from the latest stored reading; live pushes replace it
+    setDisplayReading(null);
+    getReadings(activeFarm.id, 1, 1)
+      .then((d) => setDisplayReading((current) => current || d.readings?.[0] || null))
+      .catch(() => {});
   }, [activeFarm]);
 
   async function loadDevices() {
