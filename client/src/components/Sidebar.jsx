@@ -3,21 +3,23 @@ import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Cpu, Camera, TrendingUp, Lightbulb, BarChart2, History, ChevronLeft, ChevronRight, Leaf, Plus, Pencil } from 'lucide-react';
 import { useFarm } from '../contexts/FarmContext';
 import FarmModal from './FarmModal';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const NAV = [
-  { to: '/dashboard/overview',         icon: LayoutDashboard, label: 'Overview' },
-  { to: '/dashboard/sensor',           icon: Cpu,             label: 'Sensor Data' },
-  { to: '/dashboard/image-analysis',   icon: Camera,          label: 'Image Analysis' },
-  { to: '/dashboard/yield-prediction', icon: TrendingUp,      label: 'Yield Prediction' },
-  { to: '/dashboard/recommendations',  icon: Lightbulb,       label: 'Recommendations' },
-  { to: '/dashboard/analytics',        icon: BarChart2,       label: 'Analytics' },
-  { to: '/dashboard/history',          icon: History,         label: 'History' },
+  { to: '/dashboard/overview',         icon: LayoutDashboard, labelKey: 'side.overview' },
+  { to: '/dashboard/sensor',           icon: Cpu,             labelKey: 'side.sensor' },
+  { to: '/dashboard/image-analysis',   icon: Camera,          labelKey: 'side.image' },
+  { to: '/dashboard/yield-prediction', icon: TrendingUp,      labelKey: 'side.yield' },
+  { to: '/dashboard/recommendations',  icon: Lightbulb,       labelKey: 'side.recs' },
+  { to: '/dashboard/analytics',        icon: BarChart2,       labelKey: 'side.analytics' },
+  { to: '/dashboard/history',          icon: History,         labelKey: 'side.history' },
 ];
 
 // On small screens the sidebar is an off-canvas drawer controlled by the dashboard layout
 export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
   const [collapsed, setCollapsed] = useState(false);
   const showLabels = !collapsed || mobileOpen;
+  const { t } = useLanguage();
   const { farms, activeFarm, setActiveFarm, refreshFarms } = useFarm();
   // null = closed, 'new' = create, farm object = edit
   const [farmModal, setFarmModal] = useState(null);
@@ -44,7 +46,7 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
       {/* Farm Selector */}
       {showLabels && (
         <div className="px-3 py-3 border-b border-white/10">
-          <label htmlFor="active-farm" className="text-xs text-white/60 block mb-1">Active farm</label>
+          <label htmlFor="active-farm" className="text-xs text-white/60 block mb-1">{t('side.activeFarm')}</label>
           <select
             id="active-farm"
             value={activeFarm?.id || ''}
@@ -61,12 +63,12 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
           <div className="flex gap-2 mt-2">
             <button onClick={() => setFarmModal('new')}
               className="flex-1 flex items-center justify-center gap-1 py-1 text-xs text-white/80 border border-white/15 rounded-lg hover:bg-white/10 hover:text-white">
-              <Plus size={12} /> New farm
+              <Plus size={12} /> {t('side.newFarm')}
             </button>
             {activeFarm && (
               <button onClick={() => setFarmModal(activeFarm)}
                 className="flex-1 flex items-center justify-center gap-1 py-1 text-xs text-white/80 border border-white/15 rounded-lg hover:bg-white/10 hover:text-white">
-                <Pencil size={12} /> Edit
+                <Pencil size={12} /> {t('side.edit')}
               </button>
             )}
           </div>
@@ -76,7 +78,7 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
 
       {/* Nav */}
       <nav className="flex-1 py-4 space-y-1 px-2">
-        {NAV.map(({ to, icon: Icon, label }) => (
+        {NAV.map(({ to, icon: Icon, labelKey }) => (
           <NavLink
             key={to}
             to={to}
@@ -87,7 +89,7 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
             }
           >
             <Icon size={18} className="flex-shrink-0" />
-            {showLabels && <span>{label}</span>}
+            {showLabels && <span>{t(labelKey)}</span>}
           </NavLink>
         ))}
       </nav>
