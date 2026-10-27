@@ -8,6 +8,7 @@ export default function StatCard({ title, value, unit, trend, icon: Icon, color 
     blue:    'from-blue-500 to-blue-600',
     orange:  'from-orange-500 to-orange-600',
     red:     'from-red-500 to-red-600',
+    purple:  'from-purple-500 to-purple-600',
   };
   const hasValue = value !== null && value !== undefined && value !== '—';
 
