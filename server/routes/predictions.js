@@ -19,7 +19,7 @@ router.post('/', async (req, res, next) => {
     // Fetch reading
     let reading;
     if (soilReadingId) {
-      reading = await prisma.soilReading.findUnique({ where: { id: soilReadingId } });
+      reading = await prisma.soilReading.findFirst({ where: { id: soilReadingId, farmId } });
     } else {
       reading = await prisma.soilReading.findFirst({
         where: { farmId },
@@ -47,12 +47,10 @@ router.post('/', async (req, res, next) => {
     // Generate recommendations
     const recs = generateSoilRecommendations(reading, mlResult.shapValues || {});
 
-    // Regional average (simplified by crop type)
-    const regionalAverages = { TOMATO: 5.5, CORN: 6.0, MIXED: 5.0 };
-    const regionalAverage = regionalAverages[farm.cropType] || 5.0;
-
     // Save in transaction
     const prediction = await prisma.$transaction(async (tx) => {
+      // soilReadingId is unique: re-running on the same reading replaces the old result
+      await tx.yieldPrediction.deleteMany({ where: { soilReadingId: reading.id, farmId } });
       const pred = await tx.yieldPrediction.create({
         data: {
           farmId,
@@ -61,7 +59,6 @@ router.post('/', async (req, res, next) => {
           confidenceLow: mlResult.confidenceLow,
           confidenceHigh: mlResult.confidenceHigh,
           yieldCategory: mlResult.yieldCategory,
-          regionalAverage,
           shapValues: mlResult.shapValues || {},
           topFeatures: mlResult.topFeatures || [],
           modelVersion: '1.0.0',

@@ -329,6 +329,15 @@ function generateSoilRecommendations(sensorData, shapValues = {}) {
        'Install weather-based irrigation controllers']);
   }
 
+  if (recs.length === 0) {
+    add('SOIL_HEALTH', 'Soil Conditions Within Optimal Range',
+      'No deficiencies or risks detected in this reading. Maintain current management practices.',
+      'LOW',
+      ['Continue current fertilization and irrigation schedule',
+       'Re-test soil every 30 days to catch changes early',
+       'Keep records of yields to validate predictions']);
+  }
+
   return recs;
 }
 

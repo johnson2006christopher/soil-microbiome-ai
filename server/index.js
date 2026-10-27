@@ -4,8 +4,8 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
-const path = require('path');
 const rateLimit = require('express-rate-limit');
+const prisma = require('./lib/prisma');
 
 // ── Startup validation ────────────────────────────────────────────
 if (!process.env.JWT_SECRET) {
@@ -27,17 +27,19 @@ const io = new Server(server, {
   cors: { origin: allowAllOrigins ? true : allowedOrigins, credentials: true },
 });
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   const { farmId, token } = socket.handshake.query;
 
-  // Verify JWT before allowing farm room subscription
+  // Verify JWT and farm ownership before allowing farm room subscription
   if (farmId) {
     try {
-      jwt.verify(token, process.env.JWT_SECRET);
+      const { userId } = jwt.verify(token, process.env.JWT_SECRET);
+      const farm = await prisma.farm.findFirst({ where: { id: farmId, userId }, select: { id: true } });
+      if (!farm) throw new Error('farm not owned by user');
       socket.join(farmId);
       console.log(`Socket ${socket.id} joined farm room: ${farmId}`);
     } catch {
-      console.warn(`Socket ${socket.id} rejected: invalid/missing token for farm ${farmId}`);
+      console.warn(`Socket ${socket.id} rejected: invalid token or farm ${farmId} not owned`);
       socket.disconnect(true);
       return;
     }
@@ -64,6 +66,10 @@ app.use(cors({
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
+// Behind Railway / Cloudflare proxies: use the client IP from X-Forwarded-For,
+// otherwise every visitor shares one rate-limit bucket
+app.set('trust proxy', 1);
+
 // Rate limiting — global API throttle
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -73,9 +79,6 @@ const apiLimiter = rateLimit({
   message: { error: 'Too many requests, please try again later.' },
 });
 app.use('/api', apiLimiter);
-
-// Static uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ── Routes ────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
@@ -96,15 +99,24 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 // ── Global Error Handler ──────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
-  console.error(`[ERROR] ${_req.method} ${_req.path}:`, err.message);
+  console.error(`[ERROR] ${_req.method} ${_req.path}:`, err.message, err.cause ? `(${err.cause})` : '');
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json({ error: 'File too large (max 10 MB)' });
   }
   if (err.message?.includes('not allowed')) {
     return res.status(400).json({ error: err.message });
   }
+  if (err.code === 'P2002') {
+    return res.status(409).json({ error: 'This record already exists.' });
+  }
+  if (err.name === 'PrismaClientValidationError') {
+    return res.status(400).json({ error: 'Some values are invalid. Please check the form and try again.' });
+  }
   const status = err.status || 500;
-  res.status(status).json({ error: err.message || 'Internal server error' });
+  // Never leak internals (stack, paths, DB errors) to the client on server errors
+  // err.expose marks a message written for end users (e.g. "AI service unavailable")
+  const message = status < 500 || err.expose ? err.message : 'Something went wrong on our side. Please try again.';
+  res.status(status).json({ error: message || 'Internal server error' });
 });
 
 // ── Start ─────────────────────────────────────────────────────────

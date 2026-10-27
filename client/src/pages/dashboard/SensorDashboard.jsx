@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Wifi, WifiOff, Plus, Zap, Battery } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useFarm } from '../../contexts/FarmContext';
 import { useSocket } from '../../hooks/useSocket';
 import { getReadings, createReading } from '../../api/soilReadings';
-import { getDevices, createDevice, simulateReading, ingestReading } from '../../api/devices';
+import { getDevices, createDevice, simulateReading, sendSimulatedReading } from '../../api/devices';
 import LiveReadingTicker from '../../components/LiveReadingTicker';
 import SensorReadingCard from '../../components/SensorReadingCard';
 import SoilGauge from '../../components/SoilGauge';
@@ -38,7 +39,8 @@ const FIELD_GROUPS = {
 };
 
 export default function SensorDashboard() {
-  const [tab, setTab] = useState('live');
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState(searchParams.get('tab') || 'live');
   const { activeFarm } = useFarm();
   const { latestReading, isConnected } = useSocket(activeFarm?.id);
   const [displayReading, setDisplayReading] = useState(null);
@@ -51,7 +53,13 @@ export default function SensorDashboard() {
   useEffect(() => { if (latestReading) setDisplayReading(latestReading); }, [latestReading]);
 
   useEffect(() => {
-    if (activeFarm) loadDevices();
+    if (!activeFarm) return;
+    loadDevices();
+    // Start the Live Feed from the latest stored reading; live pushes replace it
+    setDisplayReading(null);
+    getReadings(activeFarm.id, 1, 1)
+      .then((d) => setDisplayReading((current) => current || d.readings?.[0] || null))
+      .catch(() => {});
   }, [activeFarm]);
 
   async function loadDevices() {
@@ -61,16 +69,29 @@ export default function SensorDashboard() {
     } catch {}
   }
 
+  // Live Feed: store a SIMULATED reading so it shows live and can be predicted on
   async function handleSimulate() {
     const dev = devices[0];
-    if (!dev) return toast.error('No device registered for this farm');
+    if (!dev) return toast.error('Register a device first (Devices tab)');
+    try {
+      const reading = await sendSimulatedReading(dev.id);
+      setDisplayReading(reading);
+      toast.success('Simulated reading stored');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Could not create a simulated reading');
+    }
+  }
+
+  // Manual Entry: pre-fill the form with sample values the user can edit
+  async function handleFillSample() {
+    const dev = devices[0];
+    if (!dev) return toast.error('Register a device first (Devices tab)');
     try {
       const res = await simulateReading(dev.id);
-      setDisplayReading(res.simulatedReading);
       setForm(res.simulatedReading);
-      toast.success('Simulated reading loaded');
+      toast.success('Form filled with sample values');
     } catch (err) {
-      toast.error('Simulation failed');
+      toast.error('Could not load sample values');
     }
   }
 
@@ -101,15 +122,12 @@ export default function SensorDashboard() {
 
   async function handleSimulatePing(device) {
     try {
-      await ingestReading(device.deviceSerial, {
-        soilMoisture: 52, soilTemperature: 24, soilPh: 6.5,
-        electricalConductivity: 1.2, organicMatter: 3.5,
-        nitrogenPpm: 35, phosphorusPpm: 22, potassiumPpm: 180,
-        ambientTemperature: 28, humidity: 65,
-      });
-      toast.success(`Reading received from ${device.deviceSerial}`);
+      await sendSimulatedReading(device.id);
+      toast.success(`Simulated reading stored for ${device.deviceSerial}`);
       loadDevices();
-    } catch { toast.error('Ping failed'); }
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Could not send simulated reading');
+    }
   }
 
   const r = displayReading || {};
@@ -144,7 +162,7 @@ export default function SensorDashboard() {
               {/* Gauges for key values */}
               <div className="flex gap-6 flex-wrap">
                 <SoilGauge value={r.soilMoisture} label="Moisture" unit="%" />
-                <SoilGauge value={r.soilPh ? (r.soilPh / 14) * 100 : 0} label={`pH ${r.soilPh?.toFixed(2) || '—'}`} unit="" />
+                <SoilGauge value={r.soilPh} max={14} optimalMin={5.5} optimalMax={7.5} label="Soil pH" unit="" />
                 <SoilGauge value={r.humidity} label="Humidity" unit="%" />
               </div>
 
@@ -173,9 +191,9 @@ export default function SensorDashboard() {
         <form onSubmit={handleManualSubmit} className="space-y-6 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
           <div className="flex justify-between items-center">
             <h3 className="font-semibold text-gray-800">Add Soil Reading</h3>
-            <button type="button" onClick={handleSimulate}
+            <button type="button" onClick={handleFillSample}
               className="text-sm text-primary-600 hover:underline flex items-center gap-1">
-              <Zap size={14} /> Auto-fill from Sensor
+              <Zap size={14} /> Fill with sample values
             </button>
           </div>
 
@@ -260,7 +278,7 @@ export default function SensorDashboard() {
                 )}
                 <button onClick={() => handleSimulatePing(d)}
                   className="w-full py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200">
-                  Simulate Ping
+                  Send Simulated Reading
                 </button>
               </div>
             ))}

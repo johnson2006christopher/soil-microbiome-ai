@@ -1,0 +1,23 @@
+# Rendered by the nginx image at startup (envsubst): ${PORT} comes from the
+# environment (Railway sets it; the Dockerfile defaults it to 80).
+# The SPA calls the API on its own origin via VITE_API_URL, so no proxying here.
+server {
+    listen ${PORT};
+    listen [::]:${PORT};
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Hashed build assets never change
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+}

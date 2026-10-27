@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 const FarmContext = createContext(null);
 
 export function FarmProvider({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token } = useAuth();
   const [farms, setFarms] = useState([]);
   const [activeFarm, setActiveFarmState] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -34,7 +34,7 @@ export function FarmProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, token]);
 
   useEffect(() => {
     if (isAuthenticated) refreshFarms();

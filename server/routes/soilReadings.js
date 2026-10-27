@@ -46,26 +46,32 @@ router.post('/', async (req, res, next) => {
     if (!farm) return res.status(403).json({ error: 'Access denied' });
 
     const validators = {
-      soilPh:                { min: 0,  max: 14,  required: true,  label: 'soilPh' },
-      soilMoisture:          { min: 0,  max: 100, required: true,  label: 'soilMoisture' },
-      soilTemperature:       { min: -10,max: 60,  required: true,  label: 'soilTemperature' },
-      electricalConductivity:{ min: 0,  max: 20,  required: true,  label: 'electricalConductivity' },
-      organicMatter:         { min: 0,  max: 100, required: true,  label: 'organicMatter' },
-      nitrogenPpm:           { min: 0,  max: 10000, required: true, label: 'nitrogenPpm' },
-      phosphorusPpm:         { min: 0,  max: 10000, required: true, label: 'phosphorusPpm' },
-      potassiumPpm:          { min: 0,  max: 10000, required: true, label: 'potassiumPpm' },
-      microbialDiversityIndex:      { min: 0, max: 20,   required: false, label: 'microbialDiversityIndex' },
-      pathogenicFungiRatio:         { min: 0, max: 100,  required: false, label: 'pathogenicFungiRatio' },
-      nitrogenFixingBacteriaRatio:  { min: 0, max: 100,  required: false, label: 'nitrogenFixingBacteriaRatio' },
-      bacterialCountCfu:            { min: 0, max: 1e6,   required: false, label: 'bacterialCountCfu' },
-      rainfallMm:            { min: 0,  max: 5000, required: false, label: 'rainfallMm' },
-      ambientTemperature:    { min: -50,max: 60,  required: false, label: 'ambientTemperature' },
-      humidity:              { min: 0,  max: 100, required: false, label: 'humidity' },
-      fertilizerKgPerHa:     { min: 0,  max: 10000, required: false, label: 'fertilizerKgPerHa' },
-      previousYieldTons:     { min: 0,  max: 1000, required: false, label: 'previousYieldTons' },
-      growingSeasonDays:     { min: 0,  max: 730,  required: false, label: 'growingSeasonDays' },
+      soilPh:                { min: 0,  max: 14,  required: true,  label: 'Soil pH' },
+      soilMoisture:          { min: 0,  max: 100, required: true,  label: 'Soil moisture' },
+      soilTemperature:       { min: -10,max: 60,  required: true,  label: 'Soil temperature' },
+      electricalConductivity:{ min: 0,  max: 20,  required: true,  label: 'Electrical conductivity' },
+      organicMatter:         { min: 0,  max: 100, required: true,  label: 'Organic matter' },
+      nitrogenPpm:           { min: 0,  max: 10000, required: true, label: 'Nitrogen (N)' },
+      phosphorusPpm:         { min: 0,  max: 10000, required: true, label: 'Phosphorus (P)' },
+      potassiumPpm:          { min: 0,  max: 10000, required: true, label: 'Potassium (K)' },
+      bulkDensity:           { min: 0,  max: 3,     required: false, label: 'Bulk density' },
+      calciumPpm:            { min: 0,  max: 100000, required: false, label: 'Calcium (Ca)' },
+      magnesiumPpm:          { min: 0,  max: 10000, required: false, label: 'Magnesium (Mg)' },
+      sulfurPpm:             { min: 0,  max: 10000, required: false, label: 'Sulfur (S)' },
+      microbialDiversityIndex:      { min: 0, max: 20,   required: false, label: 'Microbial diversity' },
+      pathogenicFungiRatio:         { min: 0, max: 100,  required: false, label: 'Pathogenic fungi' },
+      nitrogenFixingBacteriaRatio:  { min: 0, max: 100,  required: false, label: 'Nitrogen-fixing bacteria' },
+      bacterialCountCfu:            { min: 0, max: 1e6,   required: false, label: 'Bacterial count' },
+      rainfallMm:            { min: 0,  max: 5000, required: false, label: 'Rainfall' },
+      ambientTemperature:    { min: -50,max: 60,  required: false, label: 'Air temperature' },
+      humidity:              { min: 0,  max: 100, required: false, label: 'Humidity' },
+      fertilizerKgPerHa:     { min: 0,  max: 10000, required: false, label: 'Fertilizer applied' },
+      previousYieldTons:     { min: 0,  max: 1000, required: false, label: 'Previous yield' },
+      growingSeasonDays:     { min: 0,  max: 730,  required: false, label: 'Growing season length' },
     };
 
+    // Only validated fields reach the DB, as numbers (form inputs arrive as strings)
+    const data = { farmId, source: 'MANUAL', mycorrhizalFungiPresence: Boolean(fields.mycorrhizalFungiPresence) };
     for (const [key, rule] of Object.entries(validators)) {
       const val = fields[key];
       if (rule.required && (val === undefined || val === null || val === '')) {
@@ -77,12 +83,11 @@ router.post('/', async (req, res, next) => {
         if (n < rule.min || n > rule.max) {
           return res.status(400).json({ error: `${rule.label} must be between ${rule.min} and ${rule.max}` });
         }
+        data[key] = key === 'growingSeasonDays' ? Math.round(n) : n;
       }
     }
 
-    const reading = await prisma.soilReading.create({
-      data: { farmId, source: 'MANUAL', ...fields },
-    });
+    const reading = await prisma.soilReading.create({ data });
     res.status(201).json(reading);
   } catch (err) { next(err); }
 });

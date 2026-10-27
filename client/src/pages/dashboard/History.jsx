@@ -5,6 +5,7 @@ import { getPredictions, updateActualYield } from '../../api/predictions';
 import { getAnalyses } from '../../api/imageAnalysis';
 import { useFarm } from '../../contexts/FarmContext';
 import HealthStatusBadge from '../../components/HealthStatusBadge';
+import { formatClassName } from '../../utils/labels';
 
 const CATEGORY_COLORS = { POOR: '#dc2626', AVERAGE: '#ca8a04', GOOD: '#2563eb', EXCELLENT: '#16a34a' };
 
@@ -66,7 +67,7 @@ export default function History() {
   function exportImageCsv() {
     const rows = [['Date', 'Type', 'Predicted Class', 'Confidence', 'Health Status']];
     analyses.forEach((a) => {
-      rows.push([new Date(a.analyzedAt).toLocaleDateString(), a.imageType, a.predictedClass, (a.confidence * 100).toFixed(1) + '%', a.healthStatus]);
+      rows.push([new Date(a.analyzedAt).toLocaleDateString(), a.imageType, formatClassName(a.predictedClass), (a.confidence * 100).toFixed(1) + '%', a.healthStatus]);
     });
     const csv = rows.map((r) => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -201,7 +202,7 @@ export default function History() {
                     <td className="py-3 px-4 text-gray-600">{new Date(a.analyzedAt).toLocaleDateString()}</td>
                     <td className="py-3 px-4 text-gray-600">{a.farm?.name || '—'}</td>
                     <td className="py-3 px-4"><span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{a.imageType}</span></td>
-                    <td className="py-3 px-4 font-medium text-gray-800">{a.predictedClass?.replace(/___/g, ' › ')}</td>
+                    <td className="py-3 px-4 font-medium text-gray-800">{formatClassName(a.predictedClass)}</td>
                     <td className="py-3 px-4 font-mono">{(a.confidence * 100).toFixed(1)}%</td>
                     <td className="py-3 px-4"><HealthStatusBadge status={a.healthStatus} size="sm" /></td>
                   </tr>
@@ -226,7 +227,7 @@ export default function History() {
       {selectedImg && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setSelectedImg(null)}>
           <div className="bg-white rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-bold text-gray-800 mb-1">{selectedImg.predictedClass?.replace(/___/g, ' › ')}</h3>
+            <h3 className="font-bold text-gray-800 mb-1">{formatClassName(selectedImg.predictedClass)}</h3>
             <p className="text-sm text-gray-400 mb-3">{new Date(selectedImg.analyzedAt).toLocaleString()}</p>
             <HealthStatusBadge status={selectedImg.healthStatus} size="lg" />
             <p className="mt-3 text-sm text-gray-600">Confidence: {(selectedImg.confidence * 100).toFixed(1)}%</p>

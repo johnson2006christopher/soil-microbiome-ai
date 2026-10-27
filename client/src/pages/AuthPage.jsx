@@ -82,7 +82,7 @@ export default function AuthPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                 <div className="relative">
-                  <input type={showPass ? 'text' : 'password'} value={form.password} onChange={set('password')} className={inputClass} placeholder="••••••••" required />
+                  <input type={showPass ? 'text' : 'password'} value={form.password} onChange={set('password')} className={inputClass} placeholder="Enter your password" required />
                   <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-3 text-gray-400">
                     {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>

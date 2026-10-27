@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { TrendingUp, TrendingDown, AlertTriangle, Cpu } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { predictYield, getPredictions } from '../../api/predictions';
@@ -7,6 +8,7 @@ import { useFarm } from '../../contexts/FarmContext';
 import LoadingSteps from '../../components/LoadingSteps';
 import FeatureImportanceChart from '../../components/FeatureImportanceChart';
 import RecommendationCard from '../../components/RecommendationCard';
+import { featureLabel } from '../../utils/labels';
 
 const PRED_STEPS = [
   'Loading soil parameters...',
@@ -30,12 +32,16 @@ export default function YieldPrediction() {
   const [history, setHistory] = useState([]);
   const [selectedPred, setSelectedPred] = useState(null);
   const [readingAge, setReadingAge] = useState(null);
+  const [readingsLoaded, setReadingsLoaded] = useState(false);
 
   useEffect(() => {
     if (activeFarm) { loadLatestReading(); loadHistory(); }
   }, [activeFarm]);
 
   async function loadLatestReading() {
+    // Clear the previous farm's reading so it is never predicted on by mistake
+    setLatestReading(null);
+    setReadingsLoaded(false);
     try {
       const d = await getReadings(activeFarm.id, 1, 1);
       if (d.readings?.length > 0) {
@@ -45,6 +51,7 @@ export default function YieldPrediction() {
         setReadingAge(Math.round(hours));
       }
     } catch {}
+    setReadingsLoaded(true);
   }
 
   async function loadHistory() {
@@ -71,8 +78,7 @@ export default function YieldPrediction() {
       loadHistory();
     } catch (err) {
       clearInterval(interval);
-      const msg = err.response?.data?.detail || err.response?.data?.error || err.message;
-      toast.error(msg || 'Prediction failed');
+      toast.error(err.response?.data?.error || 'Prediction failed. Please try again.');
       setStep(0);
     } finally {
       setPredicting(false);
@@ -96,12 +102,32 @@ export default function YieldPrediction() {
         <span className="text-sm text-gray-400 font-normal">Tabular Model 1 — RF + GB + XGBoost Ensemble</span>
       </div>
 
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 text-sm text-amber-800">
+        <strong>Prototype:</strong> the yield model is trained on synthetic data until real harvest records are
+        available. Treat predictions as indicative, not as a forecast.
+      </div>
+
+      {readingsLoaded && !latestReading && (
+        <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-5 text-center text-sm text-gray-600">
+          This farm has no soil readings yet.{' '}
+          <Link to="/dashboard/sensor?tab=manual" className="font-semibold text-primary-600 hover:underline">
+            Add a soil reading
+          </Link>{' '}
+          to run a prediction.
+        </div>
+      )}
+
       {/* Latest Reading Summary */}
       {latestReading && (
         <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <p className="text-sm text-gray-500">Latest Soil Reading</p>
+              <p className="text-sm text-gray-500">
+                Latest Soil Reading
+                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 capitalize">
+                  {latestReading.source?.toLowerCase()}
+                </span>
+              </p>
               <div className="flex gap-4 mt-1">
                 {[
                   { l: 'pH', v: latestReading.soilPh?.toFixed(2) },
@@ -126,7 +152,7 @@ export default function YieldPrediction() {
       )}
 
       {/* Predict Button */}
-      <button onClick={handlePredict} disabled={predicting || !activeFarm}
+      <button onClick={handlePredict} disabled={predicting || !activeFarm || !latestReading}
         className="w-full py-5 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-2xl font-bold text-lg hover:from-primary-600 hover:to-primary-700 disabled:opacity-60 shadow-lg flex items-center justify-center gap-3 transition-all">
         <Cpu size={24} />
         {predicting ? 'Running AI Models...' : 'Run Yield Prediction'}
@@ -209,7 +235,7 @@ export default function YieldPrediction() {
                             <span className={`font-mono font-bold ${f.shapValue >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                               {f.shapValue >= 0 ? '+' : ''}{f.shapValue?.toFixed(3)}
                             </span>
-                            <span className="text-gray-600 text-xs">{f.feature.replace(/([A-Z])/g, ' $1').trim()}</span>
+                            <span className="text-gray-600 text-xs">{featureLabel(f.feature)}</span>
                           </li>
                         ))}
                         {items.length === 0 && <li className="text-xs text-gray-400">No data</li>}

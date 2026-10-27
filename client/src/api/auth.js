@@ -5,3 +5,6 @@ export const login = (email, password) =>
 
 export const register = (userData) =>
   axiosClient.post('/api/auth/register', userData).then((r) => r.data);
+
+export const startDemo = () =>
+  axiosClient.post('/api/auth/demo').then((r) => r.data);

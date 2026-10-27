@@ -287,7 +287,7 @@ def train_all_cnn_models():
     return results
 
 
-def predict_image_from_bytes(image_bytes: bytes, dataset_type: str) -> dict:
+def predict_image_from_bytes(image_bytes: bytes, dataset_type: str, model=None, class_indices=None) -> dict:
     """
     Run CNN inference on raw image bytes.
 
@@ -314,10 +314,11 @@ def predict_image_from_bytes(image_bytes: bytes, dataset_type: str) -> dict:
             ),
         )
 
-    model = tf.keras.models.load_model(model_path)
-
-    with open(classes_path) as f:
-        class_indices = json.load(f)
+    # Callers that cache loaded models pass them in; loading per request takes seconds
+    if model is None or class_indices is None:
+        model = tf.keras.models.load_model(model_path)
+        with open(classes_path) as f:
+            class_indices = json.load(f)
 
     idx_to_class = {v: k for k, v in class_indices.items()}
 
