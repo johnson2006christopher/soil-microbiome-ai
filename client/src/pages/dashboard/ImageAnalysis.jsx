@@ -11,6 +11,7 @@ import HealthStatusBadge from '../../components/HealthStatusBadge';
 import ConfidenceRing from '../../components/ConfidenceRing';
 import RecommendationCard from '../../components/RecommendationCard';
 import LoadingSteps from '../../components/LoadingSteps';
+import EmptyState from '../../components/EmptyState';
 
 const STEPS = [
   'Uploading image...',
@@ -231,7 +232,9 @@ export default function ImageAnalysis() {
             </button>
           ))}
           {history.length === 0 && (
-            <div className="col-span-5 text-center py-8 text-gray-400 text-sm">No analyses yet</div>
+            <div className="col-span-full">
+              <EmptyState compact title="No leaf photos checked yet" body="Upload a close-up of a tomato or maize leaf above to get a diagnosis." />
+            </div>
           )}
         </div>
 

@@ -4,18 +4,25 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Earth-and-leaf palette: shamba green (actions) deepening to mlima green (brand)
         primary: {
-          50:  '#f0f7f4',
-          100: '#d9ede4',
-          200: '#b5daca',
-          300: '#84c0a8',
-          400: '#529e84',
-          500: '#2d6a4f',
-          600: '#235a41',
-          700: '#1b4a34',
-          800: '#143b28',
-          900: '#0e2c1e',
+          50:  '#eef6f0',
+          100: '#d6eadb',
+          200: '#afd5b9',
+          300: '#7fba90',
+          400: '#559f6b',
+          500: '#3e8e5a',
+          600: '#327549',
+          700: '#285e3b',
+          800: '#1f4d3a',
+          900: '#163828',
         },
+        mlima: '#1f4d3a',
+        shamba: '#3e8e5a',
+        maize: '#e3b23c',
+        soil: { DEFAULT: '#4a3426', light: '#7a5a43', deep: '#2f2018' },
+        mist: '#eef4ef',
+        ink: '#1b2a22',
         earth: {
           brown: '#a0522d',
           cream: '#f5f0e8',
@@ -30,7 +37,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['"Atkinson Hyperlegible"', 'system-ui', 'sans-serif'],
+        display: ['"Familjen Grotesk"', 'system-ui', 'sans-serif'],
       },
     },
   },

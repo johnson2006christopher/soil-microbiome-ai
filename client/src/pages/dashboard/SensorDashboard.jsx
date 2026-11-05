@@ -9,6 +9,7 @@ import { getDevices, createDevice, simulateReading, sendSimulatedReading } from 
 import LiveReadingTicker from '../../components/LiveReadingTicker';
 import SensorReadingCard from '../../components/SensorReadingCard';
 import SoilGauge from '../../components/SoilGauge';
+import EmptyState from '../../components/EmptyState';
 
 const FIELD_GROUPS = {
   Physical: [
@@ -179,9 +180,8 @@ export default function SensorDashboard() {
               ))}
             </>
           ) : (
-            <div className="flex items-center justify-center h-40 bg-gray-50 rounded-xl border border-dashed border-gray-300 text-gray-400 text-sm">
-              No readings yet. Click "Request Simulated Reading" or connect a device.
-            </div>
+            <EmptyState title="No readings yet"
+              body="Connect a sensor, add a reading by hand, or use Request Simulated Reading to try it out." />
           )}
         </div>
       )}

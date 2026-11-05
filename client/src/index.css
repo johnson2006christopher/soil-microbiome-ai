@@ -5,8 +5,13 @@
 @layer base {
   * { box-sizing: border-box; }
   body {
-    @apply font-sans text-gray-900 antialiased;
-    background-color: #f9fafb;
+    @apply font-sans text-ink antialiased;
+    background-color: #f5f8f5;
+  }
+  h1, h2, h3 { @apply font-display tracking-tight; }
+  :focus-visible { outline: 3px solid #e3b23c; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
   }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: #f1f5f9; }
